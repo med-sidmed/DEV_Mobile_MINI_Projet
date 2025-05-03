@@ -1,0 +1,114 @@
+package com.example.shop.Models;
+
+import java.util.Date;
+
+public class ArticlePanier {
+
+    private Long id;
+
+    private Produits produit;
+
+
+    private Panier panier;
+
+    private int quantite;
+
+
+    private Date dateAjout;
+
+
+
+    private Date dateModification;
+
+     private boolean isActive;
+
+     private double prixUnitaire;
+
+     private double prixTotal;
+
+
+     ArticlePanier(){}
+
+    public ArticlePanier(Produits produit, Panier panier, int quantite, Date dateAjout, Date dateModification, boolean isActive, double prixUnitaire, double prixTotal) {
+        this.produit = produit;
+        this.panier = panier;
+        this.quantite = quantite;
+        this.dateAjout = dateAjout;
+        this.dateModification = dateModification;
+        this.isActive = isActive;
+        this.prixUnitaire = prixUnitaire;
+        this.prixTotal = prixTotal;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Produits getProduit() {
+        return produit;
+    }
+
+    public void setProduit(Produits produit) {
+        this.produit = produit;
+    }
+
+    public Panier getPanier() {
+        return panier;
+    }
+
+    public void setPanier(Panier panier) {
+        this.panier = panier;
+    }
+
+    public int getQuantite() {
+        return quantite;
+    }
+
+    public void setQuantite(int quantite) {
+        this.quantite = quantite;
+    }
+
+    public Date getDateAjout() {
+        return dateAjout;
+    }
+
+    public void setDateAjout(Date dateAjout) {
+        this.dateAjout = dateAjout;
+    }
+
+    public Date getDateModification() {
+        return dateModification;
+    }
+
+    public void setDateModification(Date dateModification) {
+        this.dateModification = dateModification;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
+    public double getPrixUnitaire() {
+        return prixUnitaire;
+    }
+
+    public void setPrixUnitaire(double prixUnitaire) {
+        this.prixUnitaire = prixUnitaire;
+    }
+
+    public double getPrixTotal() {
+        return prixTotal;
+    }
+
+    public void setPrixTotal(double prixTotal) {
+        this.prixTotal = prixTotal;
+    }
+}
