@@ -1,4 +1,4 @@
-package com.example.shop.Models;
+package com.example.shop.API;
 
 import android.os.Bundle;
 import android.view.View;
