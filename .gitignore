@@ -1,0 +1,41 @@
+# Fichiers et dossiers générés par Android Studio
+.idea/
+*.iml
+/build/
+app/build/
+
+# Fichiers Gradle
+.gradle/
+local.properties
+
+# Fichiers de cache et temporaires
+*.log
+*.tmp
+*.bak
+*.swp
+
+# Fichiers de sortie
+*.apk
+*.aab
+*.ap_
+
+# Fichiers sensibles
+google-services.json
+*.keystore
+*.jks
+
+# Dépendances locales (si non nécessaires)
+/libs/
+
+# Fichiers de test ou captures
+captures/
+
+# Fichiers spécifiques au système d'exploitation
+.DS_Store
+Thumbs.db
+
+# Flutter/Dart (si applicable, sinon ignorez)
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages

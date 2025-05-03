@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">shop</string>
+    <string name="back_button_desc">Retour</string>
+    <string name="login_title">Connexion</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Mot de passe</string>
+    <string name="login_button">Se connecter</string>
+    <string name="or_text">OU</string>
+    <string name="login_with_facebook">Continuer avec Facebook</string>
+    <string name="no_account_sign_up">Pas de compte ? S\'inscrire</string>
+</resources>

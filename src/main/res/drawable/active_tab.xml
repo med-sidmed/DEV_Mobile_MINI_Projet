@@ -1,0 +1,6 @@
+<!-- res/drawable/active_tab.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#E3F2FD" /> <!-- Fond bleu clair pour l'onglet actif -->
+    <corners android:topLeftRadius="8dp" android:topRightRadius="8dp" />
+</shape>
