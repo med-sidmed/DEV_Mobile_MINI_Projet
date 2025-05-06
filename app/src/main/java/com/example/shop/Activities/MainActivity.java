@@ -1,8 +1,10 @@
 package com.example.shop.Activities;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,6 +34,14 @@ public class MainActivity extends AppCompatActivity {
          cart_page=findViewById(R.id.cart_page);
          profile_page=findViewById(R.id.profile_page);
         btnWishlest=findViewById(R.id.btnWishlest);
+         ImageView pageProfile=(ImageView) findViewById(R.id.pageprofile) ;
+
+
+        pageProfile.setOnClickListener(v->{
+            Toast.makeText(this, "clicked ", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
+            startActivity(intent);
+        });
 
        ImageView testapi=findViewById(R.id.testapi);
 

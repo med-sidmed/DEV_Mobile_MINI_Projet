@@ -1,9 +1,6 @@
+<!-- res/values/themes.xml -->
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.Shop" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-    </style>
+    <style name="Theme.Shop" parent="Theme.AppCompat.Light.NoActionBar">
 
-    <style name="Theme.Shop" parent="Base.Theme.Shop" />
+    </style>
 </resources>
