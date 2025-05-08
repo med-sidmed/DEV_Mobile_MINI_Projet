@@ -5,8 +5,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/primary_purple">
+   >
 
+    <Button
+        android:id="@+id/btnAjouterProduit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ajouter le produit"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="@color/purple"
+        android:textColor="@android:color/white"
+        />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -15,6 +16,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public DBHelper(Context context) {
         super(context, "produits", null,1 );
     }
+
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -43,23 +45,20 @@ public class DBHelper extends SQLiteOpenHelper {
     }
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("drop table if exists produits");
+        db.execSQL("DROP TABLE IF EXISTS Produits");
+
     }
 
 
-    public long insert_produit(String nom, String description, double prix,
-                               String image1, String image2, String image3, String image4,
-                               int quantite, long categorie_id, long utilisateur_id, boolean isActive) {
-        // Obtenir une instance de la base de données en mode écriture
-        SQLiteDatabase db = this.getWritableDatabase();
+    // Méthode pour insérer un produit
+    public Boolean insert_produit(String nom, String description, double prix,
+                                  String image1, String image2, String image3, String image4,
+                                  int quantite, long categorie_id, long utilisateur_id, boolean isActive) {
 
-        // Activer les clés étrangères
+        SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("PRAGMA foreign_keys = ON;");
 
-        // Créer un objet ContentValues pour stocker les valeurs
         ContentValues values = new ContentValues();
-
-        // Ajouter les valeurs des colonnes
         values.put("nom", nom);
         values.put("description", description);
         values.put("prix", prix);
@@ -69,38 +68,31 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put("image4", image4);
         values.put("quantite", quantite);
 
-        // Formater la date actuelle pour dateAjout (format YYYY-MM-DD)
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String currentDate = sdf.format(new Date());
+        // Date actuelle pour dateAjout (format YYYY-MM-DD)
+        String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
         values.put("dateAjout", currentDate);
 
-        // dateModification peut être null lors de l'insertion
         values.putNull("dateModification");
-
-        // isActive (1 pour true, 0 pour false)
         values.put("isActive", isActive ? 1 : 0);
-
-        // Ajouter les IDs des clés étrangères
         values.put("categorie_id", categorie_id);
         values.put("utilisateur_id", utilisateur_id);
 
-        // Insérer la ligne dans la table Produits
         long newRowId = db.insert("Produits", null, values);
-
-        // Fermer la connexion à la base de données
         db.close();
 
-        // Retourner l'ID de la nouvelle ligne insérée (ou -1 en cas d'échec)
-        return newRowId;
+        if (newRowId == -1) {
+            Log.e("DBHelper", "Erreur d'insertion dans Produits");
+        }
+
+
+        return newRowId != -1;
     }
 
-
-
-
     // Méthode pour mettre à jour un produit
-    public int update_produit(long id, String nom, String description, double prix,
-                              String image1, String image2, String image3, String image4,
-                              int quantite, long categorie_id, long utilisateur_id, boolean isActive) {
+    public Boolean update_produit(long id, String nom, String description, double prix,
+                                  String image1, String image2, String image3, String image4,
+                                  int quantite, long categorie_id, long utilisateur_id, boolean isActive) {
+
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("PRAGMA foreign_keys = ON;");
 
@@ -114,31 +106,29 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put("image4", image4);
         values.put("quantite", quantite);
 
-        // Mettre à jour dateModification avec la date actuelle
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String currentDate = sdf.format(new Date());
+        // Date actuelle pour dateModification
+        String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
         values.put("dateModification", currentDate);
 
         values.put("isActive", isActive ? 1 : 0);
         values.put("categorie_id", categorie_id);
         values.put("utilisateur_id", utilisateur_id);
 
-        // Mettre à jour la ligne correspondant à l'ID
         int rowsAffected = db.update("Produits", values, "id = ?", new String[]{String.valueOf(id)});
         db.close();
-        return rowsAffected;
+
+        return rowsAffected > 0;
     }
 
     // Méthode pour supprimer un produit
-    public int delete_produit(long id) {
+    public Boolean delete_produit(long id) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("PRAGMA foreign_keys = ON;");
 
-        // Supprimer la ligne correspondant à l'ID
         int rowsAffected = db.delete("Produits", "id = ?", new String[]{String.valueOf(id)});
         db.close();
-        return rowsAffected;
-    }
 
+        return rowsAffected > 0;
+    }
 
 }
