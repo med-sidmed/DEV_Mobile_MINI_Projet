@@ -4,9 +4,11 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
 import com.example.shop.Models.Produits;
 import com.example.shop.R;
 import java.util.ArrayList;
@@ -28,7 +30,7 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
         if (newProduitsList != null) {
             produitsList.addAll(newProduitsList);
         }
-        notifyDataSetChanged(); // Notifier le RecyclerView des changements
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -45,6 +47,24 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
         holder.descriptionTextView.setText(produit.getDescription() != null ? produit.getDescription() : "Aucune description");
         holder.prixTextView.setText(String.format("%.2f", produit.getPrix()));
         holder.quantiteTextView.setText(String.valueOf(produit.getQuantite()));
+
+        // Charger les images avec Glide
+        loadImage(holder.imageView1, produit.getImage1());
+        loadImage(holder.imageView2, produit.getImage2());
+        loadImage(holder.imageView3, produit.getImage3());
+        loadImage(holder.imageView4, produit.getImage4());
+    }
+
+    private void loadImage(ImageView imageView, String imageUrl) {
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            Glide.with(context)
+                    .load(imageUrl)
+                    .placeholder(R.drawable.ic_launcher_background) // Image par défaut si le chargement échoue
+                    .error(R.drawable.circle_background) // Image en cas d'erreur
+                    .into(imageView);
+        } else {
+            imageView.setImageResource(R.drawable.card_background); // Image par défaut si pas d'URL
+        }
     }
 
     @Override
@@ -54,6 +74,7 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView nomTextView, descriptionTextView, prixTextView, quantiteTextView;
+        ImageView imageView1, imageView2, imageView3, imageView4;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -61,6 +82,10 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
             descriptionTextView = itemView.findViewById(R.id.textViewDescription);
             prixTextView = itemView.findViewById(R.id.textViewPrix);
             quantiteTextView = itemView.findViewById(R.id.textViewQuantite);
+            imageView1 = itemView.findViewById(R.id.imageView1);
+            imageView2 = itemView.findViewById(R.id.imageView2);
+            imageView3 = itemView.findViewById(R.id.imageView3);
+            imageView4 = itemView.findViewById(R.id.imageView4);
         }
     }
 }

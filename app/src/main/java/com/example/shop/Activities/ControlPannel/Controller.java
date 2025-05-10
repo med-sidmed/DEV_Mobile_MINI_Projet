@@ -13,8 +13,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.shop.Adapter.CategorieAdapter;
 import com.example.shop.Adapter.ProduitAdapter;
 import com.example.shop.Databases.DBHelper;
+import com.example.shop.Models.Categories;
 import com.example.shop.Models.Produits;
 import com.example.shop.R;
 
@@ -24,7 +26,9 @@ public class Controller extends AppCompatActivity {
 
     private DBHelper dbHelper;
     private RecyclerView recyclerProduits;
+    private RecyclerView recyclerCategories;
     private ProduitAdapter produitAdapter;
+    private CategorieAdapter categorieAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,16 +38,25 @@ public class Controller extends AppCompatActivity {
         // Initialize DBHelper
         dbHelper = new DBHelper(this);
 
-        // Initialize RecyclerView
+        // Initialize RecyclerView for products
         recyclerProduits = findViewById(R.id.recyclerProduits);
         if (recyclerProduits == null) {
-            Toast.makeText(this, "Erreur : RecyclerView non trouvé dans le layout", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Erreur : RecyclerView des produits non trouvé", Toast.LENGTH_LONG).show();
             return;
         }
         recyclerProduits.setLayoutManager(new LinearLayoutManager(this));
 
-        // Show product list
+        // Initialize RecyclerView for categories
+        recyclerCategories = findViewById(R.id.categoryList);
+        if (recyclerCategories == null) {
+            Toast.makeText(this, "Erreur : RecyclerView des catégories non trouvé", Toast.LENGTH_LONG).show();
+            return;
+        }
+        recyclerCategories.setLayoutManager(new LinearLayoutManager(this));
+
+        // Show product and category lists
         ShowProduitList();
+        ShowCategorie();
 
         // Initialize buttons
         Button btnAjouterProduit = findViewById(R.id.btnAjouterProduit);
@@ -58,6 +71,10 @@ public class Controller extends AppCompatActivity {
             EditText description = formView.findViewById(R.id.descriptionProduit);
             EditText prix = formView.findViewById(R.id.prixProduit);
             EditText quantite = formView.findViewById(R.id.quantiteProduit);
+            EditText image1 = formView.findViewById(R.id.image1Produit);
+            EditText image2 = formView.findViewById(R.id.image2Produit);
+            EditText image3 = formView.findViewById(R.id.image3Produit);
+            EditText image4 = formView.findViewById(R.id.image4Produit);
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Ajouter un Produit");
@@ -68,6 +85,10 @@ public class Controller extends AppCompatActivity {
                     String descriptionProduit = description.getText().toString().trim();
                     String prixText = prix.getText().toString().trim();
                     String quantiteText = quantite.getText().toString().trim();
+                    String image1Text = image1.getText().toString().trim();
+                    String image2Text = image2.getText().toString().trim();
+                    String image3Text = image3.getText().toString().trim();
+                    String image4Text = image4.getText().toString().trim();
 
                     if (TextUtils.isEmpty(nomProduit)) {
                         Toast.makeText(this, "Le nom du produit est requis", Toast.LENGTH_SHORT).show();
@@ -103,9 +124,17 @@ public class Controller extends AppCompatActivity {
 
                     // Insertion produit
                     boolean insert = dbHelper.insertProduct(
-                            nomProduit, descriptionProduit, prixProduit,
-                            null, null, null, null,
-                            quantiteProduit, 1, 1, true
+                            nomProduit,
+                            descriptionProduit,
+                            prixProduit,
+                            TextUtils.isEmpty(image1Text) ? null : image1Text,
+                            TextUtils.isEmpty(image2Text) ? null : image2Text,
+                            TextUtils.isEmpty(image3Text) ? null : image3Text,
+                            TextUtils.isEmpty(image4Text) ? null : image4Text,
+                            quantiteProduit,
+                            1, // categoryId (à remplacer par une valeur dynamique si nécessaire)
+                            1, // userId (à remplacer par une valeur dynamique si nécessaire)
+                            true
                     );
 
                     Toast.makeText(this, insert ? "Produit ajouté avec succès" : "Erreur lors de l'ajout",
@@ -124,7 +153,7 @@ public class Controller extends AppCompatActivity {
             builder.show();
         });
 
-        // Category addition dialog
+        // Category addition dialog (inchangé)
         btnAjouterCategorie.setOnClickListener(view -> {
             LayoutInflater inflater = LayoutInflater.from(this);
             View formView = inflater.inflate(R.layout.add_categorie, null);
@@ -150,6 +179,11 @@ public class Controller extends AppCompatActivity {
                     Toast.makeText(this, insert ? "Catégorie ajoutée avec succès" : "Erreur lors de l'ajout",
                             Toast.LENGTH_SHORT).show();
 
+                    // Refresh category list after insertion
+                    if (insert) {
+                        ShowCategorie();
+                    }
+
                 } catch (Exception e) {
                     Toast.makeText(this, "Erreur : " + e.getMessage(), Toast.LENGTH_LONG).show();
                 }
@@ -158,6 +192,7 @@ public class Controller extends AppCompatActivity {
             builder.show();
         });
     }
+
     private void ShowProduitList() {
         List<Produits> produitsList = dbHelper.getAllProducts();
         if (produitsList == null || produitsList.isEmpty()) {
@@ -169,6 +204,20 @@ public class Controller extends AppCompatActivity {
             recyclerProduits.setAdapter(produitAdapter);
         } else {
             produitAdapter.updateData(produitsList);
+        }
+    }
+
+    private void ShowCategorie() {
+        List<Categories> categoriesList = dbHelper.getAllCategories();
+        if (categoriesList == null || categoriesList.isEmpty()) {
+            Toast.makeText(this, "Aucune catégorie trouvée", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (categorieAdapter == null) {
+            categorieAdapter = new CategorieAdapter(categoriesList, this);
+            recyclerCategories.setAdapter(categorieAdapter);
+        } else {
+            categorieAdapter.updateData(categoriesList);
         }
     }
 }

@@ -30,4 +30,33 @@
         android:layout_height="wrap_content"
         android:hint="Quantité"
         android:inputType="number" />
+
+    <EditText
+        android:id="@+id/image1Produit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="URL ou chemin de l'image 1"
+        android:inputType="textUri" />
+
+    <EditText
+        android:id="@+id/image2Produit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="URL ou chemin de l'image 2"
+        android:inputType="textUri" />
+
+    <EditText
+        android:id="@+id/image3Produit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="URL ou chemin de l'image 3"
+        android:inputType="textUri" />
+
+    <EditText
+        android:id="@+id/image4Produit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="URL ou chemin de l'image 4"
+        android:inputType="textUri" />
+
 </LinearLayout>

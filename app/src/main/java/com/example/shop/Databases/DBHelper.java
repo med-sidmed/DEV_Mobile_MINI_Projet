@@ -287,7 +287,6 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         return categories;
     }
-
     // User Operations
     public boolean insertUser(String username, String email, String password) {
         SQLiteDatabase db = this.getWritableDatabase();

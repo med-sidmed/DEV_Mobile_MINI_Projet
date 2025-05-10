@@ -3,6 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.shop"> <!-- Ajoute ici ton nom de package si manquant -->
 
+<!--    Ajoutez la permission de lecture du stockage dans AndroidManifest.xml-->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <!-- Permission d'accès à Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
 
