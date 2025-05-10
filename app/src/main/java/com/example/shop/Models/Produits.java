@@ -6,7 +6,7 @@ public class Produits {
     private int id;
     private String nom;
     private String description;
-    private float prix;
+    private Double prix;
     private String image1;
     private String image2;
     private String image3;
@@ -20,9 +20,9 @@ public class Produits {
     private Users utilisateur;
 
 
-    Produits(){}
+    public Produits(){}
 
-    public Produits(String nom, String description, float prix, String image1, String image2, String image3, String image4, int quantite, Date dateAjout, Date dateModification, boolean isActive, Categories categorie, Users utilisateur) {
+    public Produits(String nom, String description, double prix, String image1, String image2, String image3, String image4, int quantite, Date dateAjout, Date dateModification, boolean isActive, Categories categorie, Users utilisateur) {
         this.nom = nom;
         this.description = description;
         this.prix = prix;
@@ -37,6 +37,8 @@ public class Produits {
         this.categorie = categorie;
         this.utilisateur = utilisateur;
     }
+
+
 
     public int getId() {
         return id;
@@ -62,12 +64,12 @@ public class Produits {
         this.description = description;
     }
 
-    public float getPrix() {
+    public Double getPrix() {
         return prix;
     }
 
     public void setPrix(float prix) {
-        this.prix = prix;
+        this.prix = (double) prix;
     }
 
     public String getImage1() {
@@ -148,5 +150,13 @@ public class Produits {
 
     public void setUtilisateur(Users utilisateur) {
         this.utilisateur = utilisateur;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categorie=null;
+    }
+
+    public void setUserId(int userId) {
+        this.utilisateur=null;
     }
 }

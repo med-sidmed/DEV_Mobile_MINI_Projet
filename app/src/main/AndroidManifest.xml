@@ -72,6 +72,16 @@
                 android:value=".Activities.MainActivity" />
         </activity>
 
+
+        <activity
+            android:name=".Activities.ControlPannel.Controller"
+            android:parentActivityName=".Activities.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".Activities.MainActivity" />
+        </activity>
+
+
     </application>
 
 </manifest>

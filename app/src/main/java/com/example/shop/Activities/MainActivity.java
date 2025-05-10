@@ -12,11 +12,12 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.shop.Activities.ControlPannel.Controller;
 import com.example.shop.R;
 
 
 public class MainActivity extends AppCompatActivity {
-    ImageView profile_page,cart_page,wishlest_page,btnGoToSecond,btnWishlest;
+    ImageView profile_page,cart_page,wishlest_page,btnGoToSecond,btnWishlest,controllerpage;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,13 +36,20 @@ public class MainActivity extends AppCompatActivity {
          profile_page=findViewById(R.id.profile_page);
         btnWishlest=findViewById(R.id.btnWishlest);
          ImageView pageProfile=(ImageView) findViewById(R.id.pageprofile) ;
-
+        controllerpage=findViewById(R.id.contoller);
 
         pageProfile.setOnClickListener(v->{
             Toast.makeText(this, "clicked ", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
             startActivity(intent);
         });
+
+        controllerpage.setOnClickListener(v->{
+            Intent intent = new Intent(MainActivity.this, Controller.class);
+            startActivity(intent);
+        });
+
+
 
        ImageView testapi=findViewById(R.id.testapi);
 

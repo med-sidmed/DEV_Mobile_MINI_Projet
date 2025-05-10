@@ -1,78 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="0dp"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_weight="1"
     android:layout_margin="8dp"
-    android:orientation="vertical"
-    android:background="@drawable/card_background"
     android:elevation="4dp"
-    android:padding="10dp">
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <ImageView
-            android:id="@+id/btnWishlest"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_alignParentEnd="true"
-            android:src="@drawable/wishlist"
-            android:contentDescription="@string/fab_transformation_scrim_behavior" />
-    </RelativeLayout>
-
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:scaleType="centerInside"
-        android:src="@drawable/tshirtsansbackground"
-        android:contentDescription="@string/password_hint" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="T-shirt black"
-        android:textColor="#000000"
-        android:textSize="14sp" />
+    android:padding="12dp"
+    android:background="@android:color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
         <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="128 €"
-            android:textColor="#8e44ad"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <LinearLayout
+            android:id="@+id/nomProduitCard"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginStart="16dp">
+            android:text="Nom"
+            android:textStyle="bold"
+            android:textSize="18sp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="12"
-                android:textColor="#8e44ad"
-                android:textSize="12sp" />
+        <TextView
+            android:id="@+id/descriptionProduitCard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Description"
+            android:textSize="14sp"
+            android:textColor="#555555"
+            android:layout_marginTop="4dp" />
 
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:src="@drawable/views_icon"
-                android:tint="#8e44ad"
-                android:contentDescription="@string/appbar_scrolling_view_behavior" />
-        </LinearLayout>
+        <TextView
+            android:id="@+id/prixProduitCard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Prix"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:id="@+id/quantiteProduitCard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Quantité"
+            android:textSize="14sp"
+            android:layout_marginTop="2dp" />
     </LinearLayout>
-</LinearLayout>
+</androidx.cardview.widget.CardView>

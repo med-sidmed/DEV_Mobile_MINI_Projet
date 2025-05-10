@@ -1,85 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
     android:padding="16dp">
 
-    <LinearLayout
-        android:orientation="vertical"
+    <EditText
+        android:id="@+id/nomProduit"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Ajouter un produit"
-            android:textSize="20sp"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:layout_margin="10sp"/>        <!-- Nom -->
-        <EditText
-            android:id="@+id/nomProduit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Nom du produit"
-            android:inputType="text"/>
+        android:layout_height="wrap_content"
+        android:hint="Nom du produit" />
 
-        <!-- Description -->
-        <EditText
-            android:id="@+id/descriptionProduit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Description"
-            android:inputType="textMultiLine"
-            android:minLines="3"/>
+    <EditText
+        android:id="@+id/descriptionProduit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Description" />
 
-        <!-- Prix -->
-        <EditText
-            android:id="@+id/prixProduit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Prix"
-            android:inputType="numberDecimal"/>
+    <EditText
+        android:id="@+id/prixProduit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Prix"
+        android:inputType="numberDecimal" />
 
-        <!-- Quantité -->
-        <EditText
-            android:id="@+id/quantiteProduit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Quantité"
-            android:inputType="number"/>
-
-        <!-- Image 1 -->
-        <EditText
-            android:id="@+id/image1Produit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Image 1 (URL ou nom fichier)"
-            android:inputType="text"/>
-
-        <!-- Image 2 -->
-        <EditText
-            android:id="@+id/image2Produit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Image 2"
-            android:inputType="text"/>
-
-        <!-- Image 3 -->
-        <EditText
-            android:id="@+id/image3Produit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Image 3"
-            android:inputType="text"/>
-
-        <!-- Image 4 -->
-        <EditText
-            android:id="@+id/image4Produit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Image 4"
-            android:inputType="text"/>
-
-
-    </LinearLayout>
-</ScrollView>
+    <EditText
+        android:id="@+id/quantiteProduit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Quantité"
+        android:inputType="number" />
+</LinearLayout>
