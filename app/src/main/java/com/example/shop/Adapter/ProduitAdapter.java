@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -18,10 +19,18 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
 
     private List<Produits> produitsList;
     private Context context;
+    private OnProductActionListener actionListener;
 
-    public ProduitAdapter(List<Produits> produitsList, Context context) {
+    // Interface pour les callbacks
+    public interface OnProductActionListener {
+        void onEditProduct(Produits produit, int position);
+        void onDeleteProduct(Produits produit, int position);
+    }
+
+    public ProduitAdapter(List<Produits> produitsList, Context context, OnProductActionListener listener) {
         this.produitsList = produitsList != null ? produitsList : new ArrayList<>();
         this.context = context;
+        this.actionListener = listener;
     }
 
     // Méthode pour mettre à jour les données
@@ -53,17 +62,31 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
         loadImage(holder.imageView2, produit.getImage2());
         loadImage(holder.imageView3, produit.getImage3());
         loadImage(holder.imageView4, produit.getImage4());
+
+        // Configurer les listeners pour les boutons
+        holder.editButton.setOnClickListener(v -> {
+            if (actionListener != null) {
+                actionListener.onEditProduct(produit, position);
+            }
+        });
+
+        holder.deleteButton.setOnClickListener(v -> {
+            if (actionListener != null) {
+                actionListener.onDeleteProduct(produit, position);
+            }
+        });
     }
 
     private void loadImage(ImageView imageView, String imageUrl) {
         if (imageUrl != null && !imageUrl.isEmpty()) {
+            imageView.setVisibility(View.VISIBLE);
             Glide.with(context)
                     .load(imageUrl)
-                    .placeholder(R.drawable.ic_launcher_background) // Image par défaut si le chargement échoue
-                    .error(R.drawable.circle_background) // Image en cas d'erreur
+                    .placeholder(R.drawable.ic_launcher_background)
+                    .error(R.drawable.image_not_found)
                     .into(imageView);
         } else {
-            imageView.setImageResource(R.drawable.card_background); // Image par défaut si pas d'URL
+            imageView.setVisibility(View.GONE);
         }
     }
 
@@ -75,6 +98,7 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView nomTextView, descriptionTextView, prixTextView, quantiteTextView;
         ImageView imageView1, imageView2, imageView3, imageView4;
+        Button editButton, deleteButton;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -86,6 +110,8 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
             imageView2 = itemView.findViewById(R.id.imageView2);
             imageView3 = itemView.findViewById(R.id.imageView3);
             imageView4 = itemView.findViewById(R.id.imageView4);
+            editButton = itemView.findViewById(R.id.produitEdit);
+            deleteButton = itemView.findViewById(R.id.produitDelete);
         }
     }
 }

@@ -22,7 +22,7 @@ import com.example.shop.R;
 
 import java.util.List;
 
-public class Controller extends AppCompatActivity {
+public class Controller extends AppCompatActivity implements ProduitAdapter.OnProductActionListener {
 
     private DBHelper dbHelper;
     private RecyclerView recyclerProduits;
@@ -122,7 +122,6 @@ public class Controller extends AppCompatActivity {
                         return;
                     }
 
-                    // Insertion produit
                     boolean insert = dbHelper.insertProduct(
                             nomProduit,
                             descriptionProduit,
@@ -132,15 +131,14 @@ public class Controller extends AppCompatActivity {
                             TextUtils.isEmpty(image3Text) ? null : image3Text,
                             TextUtils.isEmpty(image4Text) ? null : image4Text,
                             quantiteProduit,
-                            1, // categoryId (à remplacer par une valeur dynamique si nécessaire)
-                            1, // userId (à remplacer par une valeur dynamique si nécessaire)
+                            1,
+                            1,
                             true
                     );
 
                     Toast.makeText(this, insert ? "Produit ajouté avec succès" : "Erreur lors de l'ajout",
                             Toast.LENGTH_SHORT).show();
 
-                    // Refresh product list after insertion
                     if (insert) {
                         ShowProduitList();
                     }
@@ -153,7 +151,7 @@ public class Controller extends AppCompatActivity {
             builder.show();
         });
 
-        // Category addition dialog (inchangé)
+        // Category addition dialog
         btnAjouterCategorie.setOnClickListener(view -> {
             LayoutInflater inflater = LayoutInflater.from(this);
             View formView = inflater.inflate(R.layout.add_categorie, null);
@@ -179,7 +177,6 @@ public class Controller extends AppCompatActivity {
                     Toast.makeText(this, insert ? "Catégorie ajoutée avec succès" : "Erreur lors de l'ajout",
                             Toast.LENGTH_SHORT).show();
 
-                    // Refresh category list after insertion
                     if (insert) {
                         ShowCategorie();
                     }
@@ -200,7 +197,7 @@ public class Controller extends AppCompatActivity {
             return;
         }
         if (produitAdapter == null) {
-            produitAdapter = new ProduitAdapter(produitsList, this);
+            produitAdapter = new ProduitAdapter(produitsList, this, this);
             recyclerProduits.setAdapter(produitAdapter);
         } else {
             produitAdapter.updateData(produitsList);
@@ -219,5 +216,124 @@ public class Controller extends AppCompatActivity {
         } else {
             categorieAdapter.updateData(categoriesList);
         }
+    }
+
+    @Override
+    public void onEditProduct(Produits produit, int position) {
+        // Dialogue pour modifier le produit
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View formView = inflater.inflate(R.layout.add_produit, null);
+
+        EditText nom = formView.findViewById(R.id.nomProduit);
+        EditText description = formView.findViewById(R.id.descriptionProduit);
+        EditText prix = formView.findViewById(R.id.prixProduit);
+        EditText quantite = formView.findViewById(R.id.quantiteProduit);
+        EditText image1 = formView.findViewById(R.id.image1Produit);
+        EditText image2 = formView.findViewById(R.id.image2Produit);
+        EditText image3 = formView.findViewById(R.id.image3Produit);
+        EditText image4 = formView.findViewById(R.id.image4Produit);
+
+        // Pré-remplir les champs avec les données actuelles du produit
+        nom.setText(produit.getNom());
+        description.setText(produit.getDescription());
+        prix.setText(String.format("%.2f", produit.getPrix()));
+        quantite.setText(String.valueOf(produit.getQuantite()));
+        image1.setText(produit.getImage1());
+        image2.setText(produit.getImage2());
+        image3.setText(produit.getImage3());
+        image4.setText(produit.getImage4());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Modifier le Produit");
+        builder.setView(formView);
+        builder.setPositiveButton("Enregistrer", (dialog, which) -> {
+            try {
+                String nomProduit = nom.getText().toString().trim();
+                String descriptionProduit = description.getText().toString().trim();
+                String prixText = prix.getText().toString().trim();
+                String quantiteText = quantite.getText().toString().trim();
+                String image1Text = image1.getText().toString().trim();
+                String image2Text = image2.getText().toString().trim();
+                String image3Text = image3.getText().toString().trim();
+                String image4Text = image4.getText().toString().trim();
+
+                if (TextUtils.isEmpty(nomProduit)) {
+                    Toast.makeText(this, "Le nom du produit est requis", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (TextUtils.isEmpty(prixText)) {
+                    Toast.makeText(this, "Le prix est requis", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (TextUtils.isEmpty(quantiteText)) {
+                    Toast.makeText(this, "La quantité est requise", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                double prixProduit;
+                int quantiteProduit;
+                try {
+                    prixProduit = Double.parseDouble(prixText);
+                    quantiteProduit = Integer.parseInt(quantiteText);
+                } catch (NumberFormatException e) {
+                    Toast.makeText(this, "Prix ou quantité invalide", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (prixProduit < 0) {
+                    Toast.makeText(this, "Le prix ne peut pas être négatif", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (quantiteProduit < 0) {
+                    Toast.makeText(this, "La quantité ne peut pas être négative", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                boolean update = dbHelper.updateProduct(
+                        produit.getId(),
+                        nomProduit,
+                        descriptionProduit,
+                        prixProduit,
+                        TextUtils.isEmpty(image1Text) ? null : image1Text,
+                        TextUtils.isEmpty(image2Text) ? null : image2Text,
+                        TextUtils.isEmpty(image3Text) ? null : image3Text,
+                        TextUtils.isEmpty(image4Text) ? null : image4Text,
+                        quantiteProduit,
+                        produit.getCategorie().getId(),
+                        produit.getUtilisateur().getId(),
+                        produit.isActive()
+                );
+
+                Toast.makeText(this, update ? "Produit modifié avec succès" : "Erreur lors de la modification",
+                        Toast.LENGTH_SHORT).show();
+
+                if (update) {
+                    ShowProduitList();
+                }
+
+            } catch (Exception e) {
+                Toast.makeText(this, "Erreur : " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+        builder.setNegativeButton("Annuler", null);
+        builder.show();
+    }
+
+    @Override
+    public void onDeleteProduct(Produits produit, int position) {
+        // Dialogue de confirmation pour la suppression
+        new AlertDialog.Builder(this)
+                .setTitle("Supprimer le Produit")
+                .setMessage("Êtes-vous sûr de vouloir supprimer " + produit.getNom() + " ?")
+                .setPositiveButton("Supprimer", (dialog, which) -> {
+                    boolean delete = dbHelper.deleteProduct(produit.getId());
+                    Toast.makeText(this, delete ? "Produit supprimé avec succès" : "Erreur lors de la suppression",
+                            Toast.LENGTH_SHORT).show();
+                    if (delete) {
+                        ShowProduitList();
+                    }
+                })
+                .setNegativeButton("Annuler", null)
+                .show();
     }
 }

@@ -68,7 +68,7 @@ public class Produits {
         return prix;
     }
 
-    public void setPrix(float prix) {
+    public void setPrix(double prix) {
         this.prix = (double) prix;
     }
 

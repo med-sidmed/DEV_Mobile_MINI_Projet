@@ -17,9 +17,10 @@ import java.util.List;
 import java.util.Locale;
 
 public class DBHelper extends SQLiteOpenHelper {
+
+    private static final String TAG = "DBHelper";
     private static final String DATABASE_NAME = "shop.db";
     private static final int DATABASE_VERSION = 3;
-    private static final String TAG = "DBHelper";
 
     public DBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -27,65 +28,42 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Enable foreign key constraints
-        db.execSQL("PRAGMA foreign_keys = ON;");
+        String createProductsTable = "CREATE TABLE Products (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "name TEXT NOT NULL, " +
+                "description TEXT, " +
+                "price REAL NOT NULL, " +
+                "image1 TEXT, " +
+                "image2 TEXT, " +
+                "image3 TEXT, " +
+                "image4 TEXT, " +
+                "quantity INTEGER NOT NULL, " +
+                "date_added TEXT NOT NULL, " +
+                "date_modified TEXT, " +
+                "is_active INTEGER NOT NULL, " +
+                "category_id INTEGER NOT NULL, " +
+                "user_id INTEGER NOT NULL)";
+        db.execSQL(createProductsTable);
 
-        // Create Users table
-        String sqlUsers = "CREATE TABLE Users (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "username TEXT NOT NULL UNIQUE," +
-                "email TEXT NOT NULL UNIQUE," +
-                "password TEXT NOT NULL," +
-                "created_at TEXT NOT NULL," +
-                "is_active INTEGER NOT NULL DEFAULT 1" +
-                ");";
-        db.execSQL(sqlUsers);
-
-        // Create Categories table
-        String sqlCategories = "CREATE TABLE Categories (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "name TEXT NOT NULL UNIQUE," +
-                "description TEXT" +
-                ");";
-        db.execSQL(sqlCategories);
-
-        // Create Products table
-        String sqlProducts = "CREATE TABLE Products (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "name TEXT NOT NULL," +
-                "description TEXT," +
-                "price REAL NOT NULL CHECK(price >= 0)," +
-                "image1 TEXT," +
-                "image2 TEXT," +
-                "image3 TEXT," +
-                "image4 TEXT," +
-                "quantity INTEGER NOT NULL CHECK(quantity >= 0)," +
-                "date_added TEXT NOT NULL," +
-                "date_modified TEXT," +
-                "is_active INTEGER NOT NULL DEFAULT 1," +
-                "category_id INTEGER NOT NULL," +
-                "user_id INTEGER NOT NULL," +
-                "FOREIGN KEY (category_id) REFERENCES Categories(id) ON DELETE RESTRICT," +
-                "FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE RESTRICT" +
-                ");";
-        db.execSQL(sqlProducts);
+        String createCategoriesTable = "CREATE TABLE Categories (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "name TEXT NOT NULL, " +
+                "description TEXT)";
+        db.execSQL(createCategoriesTable);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.beginTransaction();
-        try {
-            db.execSQL("DROP TABLE IF EXISTS Products");
-            db.execSQL("DROP TABLE IF EXISTS Categories");
-            db.execSQL("DROP TABLE IF EXISTS Users");
-            onCreate(db);
-            db.setTransactionSuccessful();
-        } finally {
-            db.endTransaction();
-        }
+        db.execSQL("DROP TABLE IF EXISTS Products");
+        db.execSQL("DROP TABLE IF EXISTS Categories");
+        onCreate(db);
     }
 
-    // Product Operations
+    private String getCurrentDate() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        return dateFormat.format(new Date());
+    }
+
     public boolean insertProduct(String name, String description, double price,
                                  String image1, String image2, String image3, String image4,
                                  int quantity, long categoryId, long userId, boolean isActive) {
@@ -119,7 +97,7 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-    public boolean updateProduct(long id, String name, String description, double price,
+    public boolean updateProduct(int id, String name, String description, double price,
                                  String image1, String image2, String image3, String image4,
                                  int quantity, long categoryId, long userId, boolean isActive) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -139,9 +117,9 @@ public class DBHelper extends SQLiteOpenHelper {
             values.put("category_id", categoryId);
             values.put("user_id", userId);
 
-            int rows = db.update("Products", values, "id = ?", new String[]{String.valueOf(id)});
+            int rowsAffected = db.update("Products", values, "id = ?", new String[]{String.valueOf(id)});
             db.setTransactionSuccessful();
-            return rows > 0;
+            return rowsAffected > 0;
         } catch (Exception e) {
             Log.e(TAG, "Error updating product: " + e.getMessage());
             return false;
@@ -151,72 +129,15 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-    public boolean deleteProduct(long id) {
+    public boolean deleteProduct(int id) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
         try {
-            int rows = db.delete("Products", "id = ?", new String[]{String.valueOf(id)});
+            int rowsAffected = db.delete("Products", "id = ?", new String[]{String.valueOf(id)});
             db.setTransactionSuccessful();
-            return rows > 0;
+            return rowsAffected > 0;
         } catch (Exception e) {
             Log.e(TAG, "Error deleting product: " + e.getMessage());
-            return false;
-        } finally {
-            db.endTransaction();
-            db.close();
-        }
-    }
-
-    // Category Operations
-    public boolean insertCategory(String name, String description) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.beginTransaction();
-        try {
-            ContentValues values = new ContentValues();
-            values.put("name", name);
-            values.put("description", description);
-
-            long result = db.insertOrThrow("Categories", null, values);
-            db.setTransactionSuccessful();
-            return result != -1;
-        } catch (Exception e) {
-            Log.e(TAG, "Error inserting category: " + e.getMessage());
-            return false;
-        } finally {
-            db.endTransaction();
-            db.close();
-        }
-    }
-
-    public boolean updateCategory(int id, String name, String description) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.beginTransaction();
-        try {
-            ContentValues values = new ContentValues();
-            values.put("name", name);
-            values.put("description", description);
-
-            int rows = db.update("Categories", values, "id = ?", new String[]{String.valueOf(id)});
-            db.setTransactionSuccessful();
-            return rows > 0;
-        } catch (Exception e) {
-            Log.e(TAG, "Error updating category: " + e.getMessage());
-            return false;
-        } finally {
-            db.endTransaction();
-            db.close();
-        }
-    }
-
-    public boolean deleteCategory(int id) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.beginTransaction();
-        try {
-            int rows = db.delete("Categories", "id = ?", new String[]{String.valueOf(id)});
-            db.setTransactionSuccessful();
-            return rows > 0;
-        } catch (Exception e) {
-            Log.e(TAG, "Error deleting category: " + e.getMessage());
             return false;
         } finally {
             db.endTransaction();
@@ -236,8 +157,8 @@ public class DBHelper extends SQLiteOpenHelper {
                     p.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
                     p.setNom(cursor.getString(cursor.getColumnIndexOrThrow("name")));
                     p.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
-                    p.setPrix((float) cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
-                    p.setQuantite(cursor0(cursor.getInt(cursor.getColumnIndexOrThrow("quantity"))));
+                    p.setPrix(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
+                    p.setQuantite(cursor.getInt(cursor.getColumnIndexOrThrow("quantity")));
                     p.setImage1(cursor.getString(cursor.getColumnIndexOrThrow("image1")));
                     p.setImage2(cursor.getString(cursor.getColumnIndexOrThrow("image2")));
                     p.setImage3(cursor.getString(cursor.getColumnIndexOrThrow("image3")));
@@ -259,8 +180,24 @@ public class DBHelper extends SQLiteOpenHelper {
         return products;
     }
 
-    private int cursor0(int quantity) {
-        return 0;
+    public boolean insertCategory(String name, String description) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            ContentValues values = new ContentValues();
+            values.put("name", name);
+            values.put("description", description);
+
+            long result = db.insertOrThrow("Categories", null, values);
+            db.setTransactionSuccessful();
+            return result != -1;
+        } catch (Exception e) {
+            Log.e(TAG, "Error inserting category: " + e.getMessage());
+            return false;
+        } finally {
+            db.endTransaction();
+            db.close();
+        }
     }
 
     public List<Categories> getAllCategories() {
@@ -286,33 +223,5 @@ public class DBHelper extends SQLiteOpenHelper {
             db.close();
         }
         return categories;
-    }
-    // User Operations
-    public boolean insertUser(String username, String email, String password) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.beginTransaction();
-        try {
-            ContentValues values = new ContentValues();
-            values.put("username", username);
-            values.put("email", email);
-            values.put("password", password); // Note: In production, hash the password
-            values.put("created_at", getCurrentDate());
-            values.put("is_active", 1);
-
-            long result = db.insertOrThrow("Users", null, values);
-            db.setTransactionSuccessful();
-            return result != -1;
-        } catch (Exception e) {
-            Log.e(TAG, "Error inserting user: " + e.getMessage());
-            return false;
-        } finally {
-            db.endTransaction();
-            db.close();
-        }
-    }
-
-    // Utility method for current date
-    private String getCurrentDate() {
-        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
     }
 }
