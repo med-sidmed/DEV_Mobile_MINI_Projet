@@ -1,6 +1,7 @@
 package com.example.shop.Adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -52,25 +53,26 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Produits produit = produitsList.get(position);
+        Log.d("ProduitAdapter", "Produit ID: " + produit.getId() + ", Nom: " + produit.getNom());
         holder.nomTextView.setText(produit.getNom() != null ? produit.getNom() : "Sans nom");
         holder.descriptionTextView.setText(produit.getDescription() != null ? produit.getDescription() : "Aucune description");
         holder.prixTextView.setText(String.format("%.2f", produit.getPrix()));
         holder.quantiteTextView.setText(String.valueOf(produit.getQuantite()));
 
-        // Charger les images avec Glide
         loadImage(holder.imageView1, produit.getImage1());
         loadImage(holder.imageView2, produit.getImage2());
         loadImage(holder.imageView3, produit.getImage3());
         loadImage(holder.imageView4, produit.getImage4());
 
-        // Configurer les listeners pour les boutons
         holder.editButton.setOnClickListener(v -> {
+            Log.d("ProduitAdapter", "Edit clicked for product ID: " + produit.getId());
             if (actionListener != null) {
                 actionListener.onEditProduct(produit, position);
             }
         });
 
         holder.deleteButton.setOnClickListener(v -> {
+            Log.d("ProduitAdapter", "Delete clicked for product ID: " + produit.getId());
             if (actionListener != null) {
                 actionListener.onDeleteProduct(produit, position);
             }

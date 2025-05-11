@@ -9,7 +9,7 @@ public class Categories {
     private String description;
 
 
-    Categories(){}
+    public Categories(){}
 
     public Categories(String nom, String description) {
         this.nom = nom;

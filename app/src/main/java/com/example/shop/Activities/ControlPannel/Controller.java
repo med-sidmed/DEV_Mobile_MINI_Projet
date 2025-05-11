@@ -22,14 +22,15 @@ import com.example.shop.R;
 
 import java.util.List;
 
-public class Controller extends AppCompatActivity implements ProduitAdapter.OnProductActionListener {
+import kotlin.text.Regex;
+
+public class Controller extends AppCompatActivity implements ProduitAdapter.OnProductActionListener, CategorieAdapter.OnCategoryActionListener {
 
     private DBHelper dbHelper;
     private RecyclerView recyclerProduits;
     private RecyclerView recyclerCategories;
     private ProduitAdapter produitAdapter;
     private CategorieAdapter categorieAdapter;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -211,7 +212,7 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
             return;
         }
         if (categorieAdapter == null) {
-            categorieAdapter = new CategorieAdapter(categoriesList, this);
+            categorieAdapter = new CategorieAdapter(categoriesList, this, this);
             recyclerCategories.setAdapter(categorieAdapter);
         } else {
             categorieAdapter.updateData(categoriesList);
@@ -220,9 +221,17 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
 
     @Override
     public void onEditProduct(Produits produit, int position) {
-        // Dialogue pour modifier le produit
+        if (produit == null) {
+            Toast.makeText(this, "Erreur : Produit non valide", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         LayoutInflater inflater = LayoutInflater.from(this);
         View formView = inflater.inflate(R.layout.add_produit, null);
+        if (formView == null) {
+            Toast.makeText(this, "Erreur : Impossible de charger le formulaire", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         EditText nom = formView.findViewById(R.id.nomProduit);
         EditText description = formView.findViewById(R.id.descriptionProduit);
@@ -233,15 +242,20 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
         EditText image3 = formView.findViewById(R.id.image3Produit);
         EditText image4 = formView.findViewById(R.id.image4Produit);
 
-        // Pré-remplir les champs avec les données actuelles du produit
-        nom.setText(produit.getNom());
-        description.setText(produit.getDescription());
+        if (nom == null || description == null || prix == null || quantite == null ||
+                image1 == null || image2 == null || image3 == null || image4 == null) {
+            Toast.makeText(this, "Erreur : Champs du formulaire non trouvés", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        nom.setText(produit.getNom() != null ? produit.getNom() : "");
+        description.setText(produit.getDescription() != null ? produit.getDescription() : "");
         prix.setText(String.format("%.2f", produit.getPrix()));
         quantite.setText(String.valueOf(produit.getQuantite()));
-        image1.setText(produit.getImage1());
-        image2.setText(produit.getImage2());
-        image3.setText(produit.getImage3());
-        image4.setText(produit.getImage4());
+        image1.setText(produit.getImage1() != null ? produit.getImage1() : "");
+        image2.setText(produit.getImage2() != null ? produit.getImage2() : "");
+        image3.setText(produit.getImage3() != null ? produit.getImage3() : "");
+        image4.setText(produit.getImage4() != null ? produit.getImage4() : "");
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Modifier le Produit");
@@ -321,7 +335,6 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
 
     @Override
     public void onDeleteProduct(Produits produit, int position) {
-        // Dialogue de confirmation pour la suppression
         new AlertDialog.Builder(this)
                 .setTitle("Supprimer le Produit")
                 .setMessage("Êtes-vous sûr de vouloir supprimer " + produit.getNom() + " ?")
@@ -336,4 +349,81 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                 .setNegativeButton("Annuler", null)
                 .show();
     }
+
+    @Override
+    public void onEditCategory(Categories category, int position) {
+        if (category == null) {
+            Toast.makeText(this, "Erreur : Catégorie non valide", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View formView = inflater.inflate(R.layout.add_categorie, null);
+        if (formView == null) {
+            Toast.makeText(this, "Erreur : Impossible de charger le formulaire", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        EditText nom = formView.findViewById(R.id.NomCategorie);
+        EditText description = formView.findViewById(R.id.DescriptionCategorie);
+
+        if (nom == null || description == null) {
+            Toast.makeText(this, "Erreur : Champs du formulaire non trouvés", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        nom.setText(category.getNom() != null ? category.getNom() : "");
+        description.setText(category.getDescription() != null ? category.getDescription() : "");
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Modifier la Catégorie");
+        builder.setView(formView);
+        builder.setPositiveButton("Enregistrer", (dialog, which) -> {
+            try {
+                String nomCategorie = nom.getText().toString().trim();
+                String descriptionCategorie = description.getText().toString().trim();
+
+                if (TextUtils.isEmpty(nomCategorie)) {
+                    Toast.makeText(this, "Le nom de la catégorie est requis", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                boolean update = dbHelper.updateCategory(
+                        category.getId(),
+                        nomCategorie,
+                        descriptionCategorie
+                );
+
+                Toast.makeText(this, update ? "Catégorie modifiée avec succès" : "Erreur lors de la modification",
+                        Toast.LENGTH_SHORT).show();
+
+                if (update) {
+                    ShowCategorie();
+                }
+
+            } catch (Exception e) {
+                Toast.makeText(this, "Erreur : " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+        builder.setNegativeButton("Annuler", null);
+        builder.show();
+    }
+
+    @Override
+    public void onDeleteCategory(Categories category, int position) {
+        new AlertDialog.Builder(this)
+                .setTitle("Supprimer la Catégorie")
+                .setMessage("Êtes-vous sûr de vouloir supprimer " + category.getNom() + " ?")
+                .setPositiveButton("Supprimer", (dialog, which) -> {
+                    boolean delete = dbHelper.deleteCategory(category.getId());
+                    Toast.makeText(this, delete ? "Catégorie supprimée avec succès" : "Erreur lors de la suppression ou catégorie associée à des produits",
+                            Toast.LENGTH_SHORT).show();
+                    if (delete) {
+                        ShowCategorie();
+                    }
+                })
+                .setNegativeButton("Annuler", null)
+                .show();
+    }
+
 }

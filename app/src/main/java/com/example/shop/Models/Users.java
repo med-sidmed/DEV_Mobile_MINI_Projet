@@ -15,10 +15,11 @@ public class Users {
     private String codePostal;
     private String pays;
     private String image;
-    private Date dateInscription;
+    private String dateInscription;
 
 
-    public Users(String nom, String prenom, String email, String password, String role, String adresse, String telephone, String ville, String codePostal, String pays, String image, Date dateInscription) {
+   public  Users(){}
+    public Users(String nom, String prenom, String email, String password, String role, String adresse, String telephone, String ville, String codePostal, String pays, String image, String dateInscription) {
         this.nom = nom;
         this.prenom = prenom;
         this.email = email;
@@ -31,6 +32,10 @@ public class Users {
         this.pays = pays;
         this.image = image;
         this.dateInscription = dateInscription;
+    }
+
+    public Users(int utilisateurId) {
+       this.id=utilisateurId;
     }
 
     public int getId() {
@@ -129,11 +134,11 @@ public class Users {
         this.image = image;
     }
 
-    public Date getDateInscription() {
+    public String getDateInscription() {
         return dateInscription;
     }
 
-    public void setDateInscription(Date dateInscription) {
+    public void setDateInscription(String dateInscription) {
         this.dateInscription = dateInscription;
     }
 }

@@ -14,17 +14,17 @@ public class ArticlePanier {
     private int quantite;
 
 
-    private Date dateAjout;
-
 
 
     private Date dateModification;
 
-     private boolean isActive;
+    private boolean isActive;
 
-     private double prixUnitaire;
+    private double prixUnitaire;
 
-     private double prixTotal;
+    private double prixTotal;   private Date dateAjout;
+
+
 
 
      ArticlePanier(){}
@@ -72,16 +72,16 @@ public class ArticlePanier {
         this.quantite = quantite;
     }
 
-    public Date getDateAjout() {
-        return dateAjout;
+    public String getDateAjout() {
+        return String.valueOf(dateAjout);
     }
 
     public void setDateAjout(Date dateAjout) {
         this.dateAjout = dateAjout;
     }
 
-    public Date getDateModification() {
-        return dateModification;
+    public String getDateModification() {
+        return String.valueOf(dateModification);
     }
 
     public void setDateModification(Date dateModification) {

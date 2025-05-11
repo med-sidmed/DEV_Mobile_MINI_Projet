@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -16,10 +17,18 @@ public class CategorieAdapter extends RecyclerView.Adapter<CategorieAdapter.View
 
     private List<Categories> categoriesList;
     private Context context;
+    private OnCategoryActionListener actionListener;
 
-    public CategorieAdapter(List<Categories> categoriesList, Context context) {
+    // Interface pour les callbacks
+    public interface OnCategoryActionListener {
+        void onEditCategory(Categories category, int position);
+        void onDeleteCategory(Categories category, int position);
+    }
+
+    public CategorieAdapter(List<Categories> categoriesList, Context context, OnCategoryActionListener listener) {
         this.categoriesList = categoriesList != null ? categoriesList : new ArrayList<>();
         this.context = context;
+        this.actionListener = listener;
     }
 
     // Méthode pour mettre à jour les données
@@ -40,9 +49,22 @@ public class CategorieAdapter extends RecyclerView.Adapter<CategorieAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Categories categorie = categoriesList.get(position);
-        holder.nomTextView.setText(categorie.getNom() != null ? categorie.getNom() : "Sans nom");
-        holder.descriptionTextView.setText(categorie.getDescription() != null ? categorie.getDescription() : "Aucune description");
+        Categories category = categoriesList.get(position);
+        holder.nomTextView.setText(category.getNom() != null ? category.getNom() : "Sans nom");
+        holder.descriptionTextView.setText(category.getDescription() != null ? category.getDescription() : "Aucune description");
+
+        // Configurer les listeners pour les boutons
+        holder.editButton.setOnClickListener(v -> {
+            if (actionListener != null) {
+                actionListener.onEditCategory(category, position);
+            }
+        });
+
+        holder.deleteButton.setOnClickListener(v -> {
+            if (actionListener != null) {
+                actionListener.onDeleteCategory(category, position);
+            }
+        });
     }
 
     @Override
@@ -50,13 +72,18 @@ public class CategorieAdapter extends RecyclerView.Adapter<CategorieAdapter.View
         return categoriesList.size();
     }
 
+
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView nomTextView, descriptionTextView;
+        Button editButton, deleteButton;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            nomTextView = itemView.findViewById(R.id.textViewNomCategorie);
-            descriptionTextView = itemView.findViewById(R.id.textViewDescriptionCategorie);
+            nomTextView = itemView.findViewById(R.id.textViewNom);
+            descriptionTextView = itemView.findViewById(R.id.textViewDescription);
+            editButton = itemView.findViewById(R.id.categorieEdit);
+            deleteButton = itemView.findViewById(R.id.categorieDelete);
         }
     }
 }

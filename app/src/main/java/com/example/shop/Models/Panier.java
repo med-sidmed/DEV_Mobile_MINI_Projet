@@ -8,13 +8,15 @@ public class Panier {
 
     private Users utilisateur;
 
-    private Date dateAjout;
-    private Date dateModification;
+    private String dateAjout;
+    private String dateModification;
     private boolean isActive;
 
     private List<ArticlePanier> articles;
 
-    public Panier(Users utilisateur, Date dateAjout, Date dateModification, boolean isActive, List<ArticlePanier> articles) {
+
+    public Panier(){}
+    public Panier(Users utilisateur, String dateAjout, String dateModification, boolean isActive, List<ArticlePanier> articles) {
         this.utilisateur = utilisateur;
         this.dateAjout = dateAjout;
         this.dateModification = dateModification;
@@ -38,19 +40,19 @@ public class Panier {
         this.utilisateur = utilisateur;
     }
 
-    public Date getDateAjout() {
+    public String getDateAjout() {
         return dateAjout;
     }
 
-    public void setDateAjout(Date dateAjout) {
+    public void setDateAjout(String dateAjout) {
         this.dateAjout = dateAjout;
     }
 
-    public Date getDateModification() {
+    public String getDateModification() {
         return dateModification;
     }
 
-    public void setDateModification(Date dateModification) {
+    public void setDateModification(String dateModification) {
         this.dateModification = dateModification;
     }
 

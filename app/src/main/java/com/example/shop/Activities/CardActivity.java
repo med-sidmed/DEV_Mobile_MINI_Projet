@@ -13,9 +13,9 @@ import com.example.shop.R;
 
 public class CardActivity  extends AppCompatActivity {
 
-    ImageView profile_page, cart_page, wishlest_page,GoBack;
+    ImageView  cart_page, wishlest_page,GoBack;
 
-    LinearLayout home_page;
+    LinearLayout home_page,profile_page;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

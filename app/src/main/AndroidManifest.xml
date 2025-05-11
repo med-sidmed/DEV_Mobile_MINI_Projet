@@ -88,6 +88,8 @@
         </activity>
 
 
+        <activity android:name=".Activities.ProductsByCategoryActivity" />
+
     </application>
 
 </manifest>
