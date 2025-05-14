@@ -70,20 +70,13 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Liste des produits -->
-            <LinearLayout
+            <!-- Liste des produits favoris -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerFavorites"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center"
-                android:weightSum="2"
-                android:layout_marginBottom="16dp">
-
-                <!-- Carte Produit -->
-                <include layout="@layout/item_product_card" />
-                <!-- Deuxième carte produit -->
-                <include layout="@layout/item_product_card" />
-            </LinearLayout>
+                android:layout_marginBottom="16dp"
+                tools:listitem="@layout/item_favorite_product" />
 
             <!-- Bouton de commande -->
             <Button
@@ -134,7 +127,6 @@
         <!-- Wishlist -->
         <LinearLayout
             android:background="@drawable/active_tab"
-
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"

@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements ProductMainAdapte
         // Initialiser DBHelper
         dbHelper = new DBHelper(this);
 
+
         // Initialiser les vues
         btnGoToSecond = findViewById(R.id.btnGoToSecond);
         wishlest_page = findViewById(R.id.wishlest_page);

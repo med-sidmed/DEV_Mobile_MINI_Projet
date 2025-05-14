@@ -2,6 +2,7 @@ package com.example.shop.Activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,6 +33,15 @@ public class ProductsByCategoryActivity extends AppCompatActivity implements Pro
 
         // Initialiser DBHelper
         dbHelper = new DBHelper(this);
+        ImageView go_back=findViewById(R.id.go_back);
+
+
+        go_back.setOnClickListener(v->{
+            Intent intent=new Intent(ProductsByCategoryActivity.this,MainActivity.class);
+            startActivity(intent);
+        });
+
+
 
         // Récupérer les données de l'intent
         Intent intent = getIntent();

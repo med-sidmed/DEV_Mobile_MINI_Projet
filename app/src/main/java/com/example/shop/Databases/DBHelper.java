@@ -1,17 +1,17 @@
 package com.example.shop.Databases;
 
- import android.content.ContentValues;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.example.shop.Models.ArticlePanier;
 import com.example.shop.Models.Categories;
 import com.example.shop.Models.Panier;
 import com.example.shop.Models.Produits;
 import com.example.shop.Models.Users;
+import com.example.shop.Models.ArticlePanier;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private static final String TAG = "DBHelper";
     private static final String DATABASE_NAME = "shop.db";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4; // Incrémenté de 3 à 4 pour la nouvelle table Favorites
 
     public DBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -61,9 +61,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 "date_modification TEXT, " +
                 "is_active INTEGER, " +
                 "FOREIGN KEY(utilisateur_id) REFERENCES users(id))";
-
         db.execSQL(CREATE_TABLE_PANIER);
-
 
         String CREATE_TABLE_ARTICLE_PANIER = "CREATE TABLE article_panier (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -75,11 +73,9 @@ public class DBHelper extends SQLiteOpenHelper {
                 "date_ajout TEXT, " +
                 "date_modification TEXT, " +
                 "is_active INTEGER, " +
-                "FOREIGN KEY(produit_id) REFERENCES produits(id), " +
+                "FOREIGN KEY(produit_id) REFERENCES Products(id), " +
                 "FOREIGN KEY(panier_id) REFERENCES panier(id))";
-
         db.execSQL(CREATE_TABLE_ARTICLE_PANIER);
-
 
         String CREATE_TABLE_USERS = "CREATE TABLE users (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -95,30 +91,139 @@ public class DBHelper extends SQLiteOpenHelper {
                 "pays TEXT, " +
                 "image TEXT, " +
                 "dateInscription TEXT)";
-
         db.execSQL(CREATE_TABLE_USERS);
 
-
+        String CREATE_TABLE_FAVORITES = "CREATE TABLE Favorites (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "user_id INTEGER NOT NULL, " +
+                "product_id INTEGER NOT NULL, " +
+                "date_added TEXT NOT NULL, " +
+                "is_active INTEGER NOT NULL DEFAULT 1, " +
+                "FOREIGN KEY(user_id) REFERENCES users(id), " +
+                "FOREIGN KEY(product_id) REFERENCES Products(id))";
+        db.execSQL(CREATE_TABLE_FAVORITES);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS Products");
-        db.execSQL("DROP TABLE IF EXISTS Categories");
-        db.execSQL("DROP TABLE IF EXISTS panier");
-        db.execSQL("DROP TABLE IF EXISTS article_panier");
-        db.execSQL("DROP TABLE IF EXISTS users");
-
-        onCreate(db);
+        if (oldVersion < 4) {
+            // Ajouter la table Favorites si la version est inférieure à 4
+            String CREATE_TABLE_FAVORITES = "CREATE TABLE Favorites (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "user_id INTEGER NOT NULL, " +
+                    "product_id INTEGER NOT NULL, " +
+                    "date_added TEXT NOT NULL, " +
+                    "is_active INTEGER NOT NULL DEFAULT 1, " +
+                    "FOREIGN KEY(user_id) REFERENCES users(id), " +
+                    "FOREIGN KEY(product_id) REFERENCES Products(id))";
+            db.execSQL(CREATE_TABLE_FAVORITES);
+        }
+        // Si d'autres modifications sont nécessaires à l'avenir, elles peuvent être ajoutées ici
     }
 
     private String getCurrentDate() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         return dateFormat.format(new Date());
     }
-    public boolean insertProduct(String name, String description, double price,
-                                 String image1, String image2, String image3, String image4,
-                                 int quantity, long categoryId, long userId, boolean isActive) {
+
+    // Méthode pour récupérer les produits favoris d'
+    public List<Produits> getFavoriteProducts(int userId) {
+        List<Produits> favoriteProducts = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            String query = "SELECT p.* FROM Products p " +
+                    "INNER JOIN Favorites f ON p.id = f.product_id " +
+                    "WHERE f.user_id = ? AND f.is_active = 1 AND p.is_active = 1";
+            cursor = db.rawQuery(query, new String[]{String.valueOf(userId)});
+            Log.d(TAG, "Nombre de produits favoris trouvés pour user_id " + userId + ": " + cursor.getCount());
+            if (cursor.moveToFirst()) {
+                do {
+                    Produits p = new Produits();
+                    p.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                    p.setNom(cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                    p.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
+                    p.setPrix(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
+                    p.setQuantite(cursor.getInt(cursor.getColumnIndexOrThrow("quantity")));
+                    p.setImage1(cursor.getString(cursor.getColumnIndexOrThrow("image1")));
+                    p.setImage2(cursor.getString(cursor.getColumnIndexOrThrow("image2")));
+                    p.setImage3(cursor.getString(cursor.getColumnIndexOrThrow("image3")));
+                    p.setImage4(cursor.getString(cursor.getColumnIndexOrThrow("image4")));
+                    p.setActive(cursor.getInt(cursor.getColumnIndexOrThrow("is_active")) == 1);
+                    p.setCategoryId(cursor.getInt(cursor.getColumnIndexOrThrow("category_id")));
+                    p.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
+                    favoriteProducts.add(p);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors de la récupération des produits favoris: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+        return favoriteProducts;
+    }
+
+    // Méthode pour ajouter un produit aux favoris
+    public boolean addFavorite(int userId, int productId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            // Vérifier si le favori existe déjà
+            Cursor cursor = db.rawQuery("SELECT id FROM Favorites WHERE user_id = ? AND product_id = ? AND is_active = 1",
+                    new String[]{String.valueOf(userId), String.valueOf(productId)});
+            if (cursor.moveToFirst()) {
+                cursor.close();
+                Log.d(TAG, "Produit " + productId + " déjà dans les favoris de l'utilisateur " + userId);
+                return false; // Favori déjà existant
+            }
+            cursor.close();
+
+            ContentValues values = new ContentValues();
+            values.put("user_id", userId);
+            values.put("product_id", productId);
+            values.put("date_added", getCurrentDate());
+            values.put("is_active", 1);
+
+            long result = db.insertOrThrow("Favorites", null, values);
+            db.setTransactionSuccessful();
+            Log.d(TAG, "Favori ajouté: user_id=" + userId + ", product_id=" + productId);
+            return result != -1;
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors de l'ajout du favori: " + e.getMessage());
+            return false;
+        } finally {
+            db.endTransaction();
+            db.close();
+        }
+    }
+
+    // Méthode pour supprimer un produit des favoris
+    public boolean removeFavorite(int userId, int productId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            int rowsAffected = db.delete("Favorites", "user_id = ? AND product_id = ?",
+                    new String[]{String.valueOf(userId), String.valueOf(productId)});
+            db.setTransactionSuccessful();
+            Log.d(TAG, "Favori supprimé: user_id=" + userId + ", product_id=" + productId + ", rowsAffected=" + rowsAffected);
+            return rowsAffected > 0;
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors de la suppression du favori: " + e.getMessage());
+            return false;
+        } finally {
+            db.endTransaction();
+            db.close();
+        }
+    }
+
+    // Les autres méthodes existantes (non modifiées) sont omises pour brevité
+    // Inclure ici les méthodes comme insertProduct, updateProduct, deleteProduct, etc.
+
+    public boolean insertProduct(String name, String description, double price, String image1, String image2,
+                                 String image3, String image4, int quantity, int categoryId, int userId, boolean isActive) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
         try {
@@ -131,11 +236,11 @@ public class DBHelper extends SQLiteOpenHelper {
             values.put("image3", image3);
             values.put("image4", image4);
             values.put("quantity", quantity);
-            values.put("date_added", getCurrentDate());
-            values.put("date_modified", (String) null);
-            values.put("is_active", isActive ? 1 : 0);
             values.put("category_id", categoryId);
             values.put("user_id", userId);
+            values.put("is_active", isActive ? 1 : 0);
+            values.put("date_added", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
+            values.put("date_modified", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
 
             long result = db.insertOrThrow("Products", null, values);
             db.setTransactionSuccessful();
@@ -280,6 +385,29 @@ public class DBHelper extends SQLiteOpenHelper {
         return categories;
     }
 
+    public Integer getIdCategoriesByNom(String nom) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        Integer categoryId = null;
+        try {
+            cursor = db.rawQuery("SELECT id FROM Categories WHERE name LIKE ?",
+                    new String[]{"%" + nom + "%"});
+            if (cursor.moveToFirst()) {
+                categoryId = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+            }
+        } catch (Exception e) {
+            InputStreamReader(TAG, "Error fetching category ID by name: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+        return categoryId;
+    }
+
+    private void InputStreamReader(String tag, String s) {
+    }
 
     public Categories GetCategorieByType(String type) {
         List<Categories> categories = getCategoriesByNom(type);
@@ -311,8 +439,6 @@ public class DBHelper extends SQLiteOpenHelper {
         return categories;
     }
 
-
-
     public boolean updateCategory(int id, String name, String description) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
@@ -337,12 +463,11 @@ public class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
         try {
-            // Vérifier s'il y a des produits associés à cette catégorie
             Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM Products WHERE category_id = ?", new String[]{String.valueOf(id)});
             if (cursor.moveToFirst() && cursor.getInt(0) > 0) {
                 cursor.close();
                 Log.w(TAG, "Cannot delete category ID " + id + " because it has associated products");
-                return false; // Ne pas supprimer si des produits sont associés
+                return false;
             }
             cursor.close();
 
@@ -358,12 +483,6 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-
-
-    //--------------------------------------------------
-    //----------------|  pannier ---------------------
-//    //----------------------------------------------
-////----------------------------------------------------
     public void ajouterPanier(Panier panier) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -380,15 +499,14 @@ public class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
             int rowsAffected = db.delete("panier", "id = ?", new String[]{String.valueOf(panierId)});
-            return rowsAffected > 0; // Retourne true si au moins une ligne a été supprimée
+            return rowsAffected > 0;
         } catch (Exception e) {
             e.printStackTrace();
-            return false; // Retourne false en cas d'erreur
+            return false;
         } finally {
-            db.close(); // Ferme la connexion à la base de données
+            db.close();
         }
     }
-
 
     public List<Panier> getAllPaniers() {
         List<Panier> paniers = new ArrayList<>();
@@ -415,13 +533,6 @@ public class DBHelper extends SQLiteOpenHelper {
         return paniers;
     }
 
-
-//----------------------------------------------------
-    //----------------| Article pannier --------------
-    //----------------------------------------------
-////--------------------------------------------------
-
-
     public void ajouterArticlePanier(ArticlePanier article) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -437,14 +548,6 @@ public class DBHelper extends SQLiteOpenHelper {
         db.insert("article_panier", null, values);
         db.close();
     }
-
-
-
-//----------------------------------------------------
-    //----------------| Usetilisaterus  --------------
-//    //----------------------------------------------
-////--------------------------------------------------
-
 
     public void ajouterUtilisateur(Users user) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -466,7 +569,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-     public Users getUserByEmail(String email) {
+    public Users getUserByEmail(String email) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query("users", null, "email=?", new String[]{email}, null, null, null);
         if (cursor != null && cursor.moveToFirst()) {
@@ -489,8 +592,6 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         return null;
     }
-
-
 
     public List<Produits> getProductsByCategory(int categoryId) {
         List<Produits> products = new ArrayList<>();
@@ -528,8 +629,6 @@ public class DBHelper extends SQLiteOpenHelper {
         return products;
     }
 
-
-
     public List<Produits> searchProducts(String query) {
         List<Produits> products = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -565,5 +664,4 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         return products;
     }
-
 }

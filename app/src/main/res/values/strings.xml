@@ -8,4 +8,6 @@
     <string name="or_text">OU</string>
     <string name="login_with_facebook">Continuer avec Facebook</string>
     <string name="no_account_sign_up">Pas de compte ? S\'inscrire</string>
+    <string name="product_image">Image du produit</string>
+    <string name="remove_from_favorites">Retirer des favoris</string>
 </resources>

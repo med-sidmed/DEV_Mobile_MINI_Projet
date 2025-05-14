@@ -1,11 +1,13 @@
 package com.example.shop.Activities.ControlPannel;
 
 import android.app.AlertDialog;
+import android.app.assist.AssistStructure;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -76,6 +78,11 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
             EditText image2 = formView.findViewById(R.id.image2Produit);
             EditText image3 = formView.findViewById(R.id.image3Produit);
             EditText image4 = formView.findViewById(R.id.image4Produit);
+            CheckBox clothes = formView.findViewById(R.id.vetement);
+            CheckBox digitals = formView.findViewById(R.id.digital);
+            CheckBox outils = formView.findViewById(R.id.outils);
+
+
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Ajouter un Produit");
@@ -91,6 +98,10 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                     String image3Text = image3.getText().toString().trim();
                     String image4Text = image4.getText().toString().trim();
 
+
+                    String  clothesCatg=clothes.getText().toString().trim() ;
+                    String toolscat=outils.getText().toString().trim();
+                    String digitalCat=digitals.getText().toString().trim();
                     if (TextUtils.isEmpty(nomProduit)) {
                         Toast.makeText(this, "Le nom du produit est requis", Toast.LENGTH_SHORT).show();
                         return;
@@ -103,6 +114,7 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                         Toast.makeText(this, "La quantité est requise", Toast.LENGTH_SHORT).show();
                         return;
                     }
+
 
                     double prixProduit;
                     int quantiteProduit;
@@ -123,6 +135,17 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                         return;
                     }
 
+                    int CategorieId=1;
+                    if(clothes.isChecked()){
+                        CategorieId= Integer.parseInt(clothes.getText().toString());
+                    }else if(outils.isChecked()){
+                        CategorieId= Integer.parseInt(outils.getText().toString());
+
+                    }else if(digitals.isChecked()){
+                        CategorieId= Integer.parseInt(digitals.getText().toString());
+
+                    }
+
                     boolean insert = dbHelper.insertProduct(
                             nomProduit,
                             descriptionProduit,
@@ -132,7 +155,7 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                             TextUtils.isEmpty(image3Text) ? null : image3Text,
                             TextUtils.isEmpty(image4Text) ? null : image4Text,
                             quantiteProduit,
-                            1,
+                            CategorieId,
                             1,
                             true
                     );
@@ -172,6 +195,8 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                         Toast.makeText(this, "Le nom de la catégorie est requis", Toast.LENGTH_SHORT).show();
                         return;
                     }
+
+
 
                     boolean insert = dbHelper.insertCategory(nomCategorie, descriptionCategorie);
 
