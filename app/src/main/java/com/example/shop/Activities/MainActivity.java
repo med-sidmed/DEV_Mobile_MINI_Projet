@@ -2,7 +2,6 @@ package com.example.shop.Activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -16,7 +15,6 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.shop.Activities.ControlPannel.Controller;
-import com.example.shop.Adapter.ProduitAdapter;
 import com.example.shop.Databases.DBHelper;
 import com.example.shop.Models.Categories;
 import com.example.shop.Models.Produits;
@@ -126,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements ProductMainAdapte
         });
 
         btnGoToSecond.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, Login_Page.class);
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(intent);
         });
 

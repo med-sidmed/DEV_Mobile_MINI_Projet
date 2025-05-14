@@ -38,11 +38,12 @@
 
         <!-- Autres activités avec navigation vers MainActivity -->
         <activity
-            android:name=".Activities.Login_Page"
-            android:parentActivityName=".Activities.MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".Activities.MainActivity" />
+            android:name=".Activities.LoginActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
 
         <activity
@@ -89,6 +90,10 @@
 
 
         <activity android:name=".Activities.ProductsByCategoryActivity" />
+
+        <activity
+            android:name=".Activities.SignupActivity"
+            android:exported="false" />
 
     </application>
 
