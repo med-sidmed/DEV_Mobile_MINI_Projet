@@ -1,6 +1,7 @@
 package com.example.shop.Adapter;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,10 +10,14 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.example.shop.Models.Produits;
 import com.example.shop.R;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +27,6 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
     private Context context;
     private OnProductActionListener actionListener;
 
-    // Interface pour les callbacks
     public interface OnProductActionListener {
         void onEditProduct(Produits produit, int position);
         void onDeleteProduct(Produits produit, int position);
@@ -34,7 +38,6 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
         this.actionListener = listener;
     }
 
-    // Méthode pour mettre à jour les données
     public void updateData(List<Produits> newProduitsList) {
         produitsList.clear();
         if (newProduitsList != null) {
@@ -82,13 +85,35 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
     private void loadImage(ImageView imageView, String imageUrl) {
         if (imageUrl != null && !imageUrl.isEmpty()) {
             imageView.setVisibility(View.VISIBLE);
+            Log.d("ProduitAdapter", "Loading image: " + imageUrl);
+            Object imageSource = imageUrl.startsWith("http") ? imageUrl : new File(imageUrl);
+            if (!imageUrl.startsWith("http") && !new File(imageUrl).exists()) {
+                Log.e("ProduitAdapter", "File does not exist: " + imageUrl);
+                imageView.setVisibility(View.GONE);
+                return;
+            }
             Glide.with(context)
-                    .load(imageUrl)
+                    .load(imageSource)
                     .placeholder(R.drawable.ic_launcher_background)
                     .error(R.drawable.image_not_found)
+                    .listener(new RequestListener<Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(@Nullable com.bumptech.glide.load.engine.GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                            Log.e("ProduitAdapter", "Failed to load image: " + imageUrl + ", Error: " + (e != null ? e.getMessage() : "Unknown"));
+                            imageView.setVisibility(View.VISIBLE); // Show error image
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, com.bumptech.glide.load.DataSource dataSource, boolean isFirstResource) {
+                            Log.d("ProduitAdapter", "Image loaded successfully: " + imageUrl);
+                            return false;
+                        }
+                    })
                     .into(imageView);
         } else {
             imageView.setVisibility(View.GONE);
+            Log.d("ProduitAdapter", "Image URL is null or empty for ImageView: " + imageView.getId());
         }
     }
 

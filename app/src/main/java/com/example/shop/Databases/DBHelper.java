@@ -664,4 +664,32 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         return products;
     }
+
+    public Categories getCategoryById(int id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        Categories category = null;
+
+        try {
+            cursor = db.rawQuery("SELECT id, nom, description FROM Categories WHERE id = ?",
+                    new String[]{String.valueOf(id)});
+
+            if (cursor != null && cursor.moveToFirst()) {
+                category = new Categories(
+                        cursor.getInt(cursor.getColumnIndexOrThrow("id")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("nom")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("description"))
+                );
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching category by id " + id + ": " + e.getMessage(), e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            // Do not close db; let SQLiteOpenHelper manage it
+        }
+
+        return category;
+    }
 }
