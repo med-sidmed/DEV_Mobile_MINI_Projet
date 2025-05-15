@@ -22,14 +22,14 @@ public class ArticlePanier {
 
     private double prixUnitaire;
 
-    private double prixTotal;   private Date dateAjout;
+    private double prixTotal;   private String dateAjout;
 
 
 
 
      ArticlePanier(){}
 
-    public ArticlePanier(Produits produit, Panier panier, int quantite, Date dateAjout, Date dateModification, boolean isActive, double prixUnitaire, double prixTotal) {
+    public ArticlePanier(Produits produit, Panier panier, int quantite, String dateAjout, Date dateModification, boolean isActive, double prixUnitaire, double prixTotal) {
         this.produit = produit;
         this.panier = panier;
         this.quantite = quantite;
@@ -38,6 +38,18 @@ public class ArticlePanier {
         this.isActive = isActive;
         this.prixUnitaire = prixUnitaire;
         this.prixTotal = prixTotal;
+    }
+
+    public ArticlePanier(Produits produit, Panier panier, int quantite,
+                         Double prix, Double prix1, String format,
+                         Object o, boolean b) {
+
+         this.produit=produit;
+         this.panier=panier;
+         this.quantite=quantite;
+         this.prixTotal= prix+prix1;
+         this.dateAjout=format;
+
     }
 
     public Long getId() {
@@ -76,7 +88,7 @@ public class ArticlePanier {
         return String.valueOf(dateAjout);
     }
 
-    public void setDateAjout(Date dateAjout) {
+    public void setDateAjout(String dateAjout) {
         this.dateAjout = dateAjout;
     }
 

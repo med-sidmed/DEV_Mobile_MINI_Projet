@@ -1,6 +1,5 @@
 package com.example.shop.Activities;
 
-
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.example.shop.Databases.DBHelper;
 import com.example.shop.Models.Produits;
 import com.example.shop.R;
 import java.util.ArrayList;
@@ -20,15 +20,33 @@ public class ProductMainAdapter extends RecyclerView.Adapter<ProductMainAdapter.
     private List<Produits> produitsList;
     private Context context;
     private OnWishlistClickListener wishlistListener;
+    private OnProductClickListener productClickListener;
+    private int currentUserId;
+    private DBHelper dbHelper;
+
+    public ProductMainAdapter(List<Produits> produitsList, ProductsByCategoryActivity context, ProductsByCategoryActivity wishlistListener) {
+        this.produitsList=produitsList;
+        this.context=context;
+        this.wishlistListener=wishlistListener;
+    }
 
     public interface OnWishlistClickListener {
         void onWishlistClick(Produits produit, boolean isAdded);
     }
 
-    public ProductMainAdapter(List<Produits> produitsList, Context context, OnWishlistClickListener listener) {
+    public interface OnProductClickListener {
+        void onProductClick(Produits produit);
+    }
+
+    public ProductMainAdapter(List<Produits> produitsList, Context context,
+                              OnWishlistClickListener wishlistListener,
+                              OnProductClickListener productClickListener, int currentUserId) {
         this.produitsList = produitsList != null ? produitsList : new ArrayList<>();
         this.context = context;
-        this.wishlistListener = listener;
+        this.wishlistListener = wishlistListener;
+        this.productClickListener = productClickListener;
+        this.currentUserId = currentUserId;
+        this.dbHelper = new DBHelper(context);
     }
 
     public void updateData(List<Produits> newProduitsList) {
@@ -66,8 +84,8 @@ public class ProductMainAdapter extends RecyclerView.Adapter<ProductMainAdapter.
             holder.imageViewProduct.setImageResource(R.drawable.image_not_found);
         }
 
-        // Gérer l'état du bouton Wishlist
-        boolean isInWishlist = produit.isActive(); // À implémenter dans Produits si nécessaire
+        // Vérifier si le produit est dans les favoris
+        boolean isInWishlist = currentUserId != -1 && dbHelper.isFavorite(currentUserId, produit.getId());
         holder.btnWishlist.setImageResource(isInWishlist ? R.drawable.wishlist : R.drawable.ic_heart_outline);
         holder.btnWishlist.setTag(isInWishlist);
 
@@ -78,6 +96,13 @@ public class ProductMainAdapter extends RecyclerView.Adapter<ProductMainAdapter.
             holder.btnWishlist.setTag(newState);
             if (wishlistListener != null) {
                 wishlistListener.onWishlistClick(produit, newState);
+            }
+        });
+
+        // Gérer le clic sur l'item
+        holder.itemView.setOnClickListener(v -> {
+            if (productClickListener != null) {
+                productClickListener.onProductClick(produit);
             }
         });
     }

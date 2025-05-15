@@ -23,8 +23,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private static final String TAG = "DBHelper";
     private static final String DATABASE_NAME = "shop.db";
-    private static final int DATABASE_VERSION = 4; // Incrémenté de 3 à 4 pour la nouvelle table Favorites
-
+    private static final int DATABASE_VERSION = 4;
     public DBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -483,18 +482,27 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-    public void ajouterPanier(Panier panier) {
+    public long ajouterPanier(Panier panier) {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("utilisateur_id", panier.getUtilisateur().getId());
-        values.put("date_ajout", panier.getDateAjout());
-        values.put("date_modification", panier.getDateModification());
-        values.put("is_active", panier.isActive() ? 1 : 0);
+        db.beginTransaction();
+        try {
+            ContentValues values = new ContentValues();
+            values.put("utilisateur_id", panier.getUtilisateur().getId());
+            values.put("date_ajout", panier.getDateAjout());
+            values.put("date_modification", panier.getDateModification());
+            values.put("is_active", panier.isActive() ? 1 : 0);
 
-        db.insert("panier", null, values);
-        db.close();
+            long id = db.insertOrThrow("panier", null, values);
+            db.setTransactionSuccessful();
+            return id;
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors de l'ajout du panier: " + e.getMessage());
+            return -1;
+        } finally {
+            db.endTransaction();
+            db.close();
+        }
     }
-
     public boolean supprimerPanier(int panierId) {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
@@ -533,20 +541,31 @@ public class DBHelper extends SQLiteOpenHelper {
         return paniers;
     }
 
-    public void ajouterArticlePanier(ArticlePanier article) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("produit_id", article.getProduit().getId());
-        values.put("panier_id", article.getPanier().getId());
-        values.put("quantite", article.getQuantite());
-        values.put("prix_unitaire", article.getPrixUnitaire());
-        values.put("prix_total", article.getPrixTotal());
-        values.put("date_ajout", article.getDateAjout());
-        values.put("date_modification", article.getDateModification());
-        values.put("is_active", article.isActive() ? 1 : 0);
 
-        db.insert("article_panier", null, values);
-        db.close();
+    public boolean ajouterArticlePanier(ArticlePanier article) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            ContentValues values = new ContentValues();
+            values.put("produit_id", article.getProduit().getId());
+            values.put("panier_id", article.getPanier().getId());
+            values.put("quantite", article.getQuantite());
+            values.put("prix_unitaire", article.getPrixUnitaire());
+            values.put("prix_total", article.getPrixTotal());
+            values.put("date_ajout", article.getDateAjout());
+            values.put("date_modification", article.getDateModification());
+            values.put("is_active", article.isActive() ? 1 : 0);
+
+            long result = db.insertOrThrow("article_panier", null, values);
+            db.setTransactionSuccessful();
+            return result != -1;
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors de l'ajout de l'article au panier: " + e.getMessage());
+            return false;
+        } finally {
+            db.endTransaction();
+            db.close();
+        }
     }
 
     public void ajouterUtilisateur(Users user) {
@@ -691,5 +710,60 @@ public class DBHelper extends SQLiteOpenHelper {
         }
 
         return category;
+    }
+
+
+    public Produits getProductById(int productId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        Produits produit = null;
+        try {
+            cursor = db.rawQuery("SELECT * FROM Products WHERE id = ? AND is_active = 1",
+                    new String[]{String.valueOf(productId)});
+            if (cursor.moveToFirst()) {
+                produit = new Produits();
+                produit.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                produit.setNom(cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                produit.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
+                produit.setPrix(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
+                produit.setQuantite(cursor.getInt(cursor.getColumnIndexOrThrow("quantity")));
+                produit.setImage1(cursor.getString(cursor.getColumnIndexOrThrow("image1")));
+                produit.setImage2(cursor.getString(cursor.getColumnIndexOrThrow("image2")));
+                produit.setImage3(cursor.getString(cursor.getColumnIndexOrThrow("image3")));
+                produit.setImage4(cursor.getString(cursor.getColumnIndexOrThrow("image4")));
+                produit.setActive(cursor.getInt(cursor.getColumnIndexOrThrow("is_active")) == 1);
+                produit.setCategoryId(cursor.getInt(cursor.getColumnIndexOrThrow("category_id")));
+                produit.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors de la récupération du produit: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+        return produit;
+    }
+
+
+    public boolean isFavorite(int userId, int productId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery("SELECT id FROM Favorites WHERE user_id = ? AND product_id = ? AND is_active = 1",
+                    new String[]{String.valueOf(userId), String.valueOf(productId)});
+            boolean isFavorite = cursor.moveToFirst();
+            Log.d(TAG, "Produit " + productId + " est favori pour user_id " + userId + ": " + isFavorite);
+            return isFavorite;
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors de la vérification du favori: " + e.getMessage());
+            return false;
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
     }
 }

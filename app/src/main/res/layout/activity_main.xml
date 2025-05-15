@@ -72,7 +72,15 @@
                 android:layout_height="100dp"
                 android:src="@drawable/promo"
                 android:contentDescription="Promo banner" />
-
+            <TextView
+                android:id="@+id/emptyMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Aucun produit disponible"
+                android:gravity="center"
+                android:visibility="gone"
+                android:layout_margin="16dp"
+                android:layout_below="@id/recyclerProducts" />
             <!-- Titre des catégories -->
             <TextView
                 android:layout_width="match_parent"

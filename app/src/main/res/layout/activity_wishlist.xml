@@ -44,7 +44,15 @@
                     android:textSize="18sp"
                     android:textColor="@color/black"
                     android:gravity="center" />
-
+                <TextView
+                    android:id="@+id/emptyMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Aucun favori trouvé"
+                    android:gravity="center"
+                    android:visibility="gone"
+                    android:layout_margin="16dp"
+                    android:layout_centerInParent="true" />
                 <ImageView
                     android:id="@+id/btn_favorite"
                     android:layout_width="32dp"
