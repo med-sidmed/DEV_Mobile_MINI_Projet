@@ -170,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements ProductMainAdapte
                 startActivity(intent);
                 return;
             }
-            Intent intent = new Intent(MainActivity.this, CartActivity.class); // Line causing the crash
+            Intent intent = new Intent(MainActivity.this, CardActivity.class); // Line causing the crash
             startActivity(intent);
         });
 

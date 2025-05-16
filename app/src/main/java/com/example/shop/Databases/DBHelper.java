@@ -766,4 +766,51 @@ public class DBHelper extends SQLiteOpenHelper {
             db.close();
         }
     }
+
+    public List<ArticlePanier> getCartItems(int userId) {
+        List<ArticlePanier> cartItems = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+
+        try {
+            // Requête SQL pour récupérer les articles du panier actifs
+            String query = "SELECT ap.*, p.name, p.price, p.image1 " +
+                    "FROM article_panier ap " +
+                    "INNER JOIN panier pn ON ap.panier_id = pn.id " +
+                    "INNER JOIN Products p ON ap.produit_id = p.id " +
+                    "WHERE pn.utilisateur_id = ? AND ap.is_active = 1 AND pn.is_active = 1";
+            cursor = db.rawQuery(query, new String[]{String.valueOf(userId)});
+
+            while (cursor.moveToNext()) {
+                ArticlePanier item = new ArticlePanier();
+                item.setId((long) cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                item.getProduit().setId(cursor.getInt(cursor.getColumnIndexOrThrow("produit_id")));
+                item.getPanier().setId(cursor.getInt(cursor.getColumnIndexOrThrow("panier_id")));
+                item.setQuantite(cursor.getInt(cursor.getColumnIndexOrThrow("quantite")));
+                item.setPrixUnitaire(cursor.getDouble(cursor.getColumnIndexOrThrow("prix_unitaire")));
+                item.setPrixTotal(cursor.getDouble(cursor.getColumnIndexOrThrow("prix_total")));
+                item.setActive(cursor.getInt(cursor.getColumnIndexOrThrow("is_active")) == 1);
+
+                // Créer l'objet Produits avec les détails du produit
+                Produits produit = new Produits();
+                produit.setId(cursor.getInt(cursor.getColumnIndexOrThrow("produit_id")));
+                produit.setNom(cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                produit.setPrix(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
+                produit.setImage1(cursor.getString(cursor.getColumnIndexOrThrow("image1")));
+                item.setProduit(produit);
+
+                cartItems.add(item);
+            }
+            Log.d(TAG, "Nombre d'articles dans le panier pour user_id " + userId + ": " + cartItems.size());
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors de la récupération des articles du panier pour user_id " + userId + ": " + e.getMessage(), e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+
+        return cartItems;
+    }
 }

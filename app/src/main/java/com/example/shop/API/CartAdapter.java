@@ -1,6 +1,7 @@
 package com.example.shop.API;
 
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.shop.Activities.CardActivity;
+import com.example.shop.Models.ArticlePanier;
 import com.example.shop.R;
 
 import java.text.NumberFormat;
@@ -24,6 +27,9 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
     private List<CartItem> cartItems;
     private Context context;
     private CartAdapterListener listener;
+
+    public CartAdapter(List<ArticlePanier> cartItems, CardActivity cardActivity) {
+    }
 
     public interface CartAdapterListener {
         void onQuantityChanged(int position, int newQuantity);
@@ -123,15 +129,16 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         Button btnMinus, btnPlus;
         ImageButton btnDelete;
 
+        @SuppressLint("WrongViewCast")
         public CartViewHolder(@NonNull View itemView) {
             super(itemView);
             productImage = itemView.findViewById(R.id.productImage);
             productName = itemView.findViewById(R.id.productName);
             productPrice = itemView.findViewById(R.id.productPrice);
-            productQuantity = itemView.findViewById(R.id.productQuantity);
-            btnMinus = itemView.findViewById(R.id.btnMinus);
-            btnPlus = itemView.findViewById(R.id.btnPlus);
-            btnDelete = itemView.findViewById(R.id.btnDelete);
+            productQuantity = itemView.findViewById(R.id.quantiteProduit);
+            btnMinus = itemView.findViewById(R.id.buttonMinus);
+            btnPlus = itemView.findViewById(R.id.buttonPlus);
+            btnDelete = itemView.findViewById(R.id.btnCheckout);
         }
     }
 }

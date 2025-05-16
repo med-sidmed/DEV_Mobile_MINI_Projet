@@ -27,7 +27,7 @@ public class ArticlePanier {
 
 
 
-     ArticlePanier(){}
+     public ArticlePanier(){}
 
     public ArticlePanier(Produits produit, Panier panier, int quantite, String dateAjout, Date dateModification, boolean isActive, double prixUnitaire, double prixTotal) {
         this.produit = produit;
