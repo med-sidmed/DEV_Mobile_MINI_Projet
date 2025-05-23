@@ -1,6 +1,7 @@
 package com.example.shop.Activities.ControlPannel;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,6 +21,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.shop.Activities.MainActivity;
 import com.example.shop.Adapter.CategorieAdapter;
 import com.example.shop.Adapter.ProduitAdapter;
 import com.example.shop.Databases.DBHelper;
@@ -38,11 +40,17 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
     private RecyclerView recyclerCategories;
     private ProduitAdapter produitAdapter;
     private CategorieAdapter categorieAdapter;
-
+    Button retourner;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_controller);
+        retourner=findViewById(R.id.retourner);
+
+        retourner.setOnClickListener(v->{
+            Intent intent=new Intent(Controller.this, MainActivity.class);
+            startActivity(intent);
+        });
 
         // Initialize DBHelper
         dbHelper = new DBHelper(this);

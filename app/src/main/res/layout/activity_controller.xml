@@ -18,6 +18,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 
+        <Button
+            android:id="@+id/retourner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Retourner"
+            tools:ignore="HardcodedText" />
+
+
         <!-- Add Product Button -->
         <Button
             android:id="@+id/btnAjouterProduit"

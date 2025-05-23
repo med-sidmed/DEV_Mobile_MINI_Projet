@@ -24,6 +24,10 @@ public class Panier {
         this.articles = articles;
     }
 
+    public Panier(int panierId) {
+        this.id=panierId;
+    }
+
     public int getId() {
         return id;
     }

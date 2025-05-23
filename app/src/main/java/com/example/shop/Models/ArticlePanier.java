@@ -1,7 +1,5 @@
 package com.example.shop.Models;
 
-import java.util.Date;
-
 public class ArticlePanier {
 
     private Long id;
@@ -16,7 +14,7 @@ public class ArticlePanier {
 
 
 
-    private Date dateModification;
+    private String dateModification;
 
     private boolean isActive;
 
@@ -27,9 +25,9 @@ public class ArticlePanier {
 
 
 
-     ArticlePanier(){}
+     public ArticlePanier(){}
 
-    public ArticlePanier(Produits produit, Panier panier, int quantite, String dateAjout, Date dateModification, boolean isActive, double prixUnitaire, double prixTotal) {
+    public ArticlePanier(Produits produit, Panier panier, int quantite, String dateAjout, String dateModification, boolean isActive, double prixUnitaire, double prixTotal) {
         this.produit = produit;
         this.panier = panier;
         this.quantite = quantite;
@@ -96,7 +94,7 @@ public class ArticlePanier {
         return String.valueOf(dateModification);
     }
 
-    public void setDateModification(Date dateModification) {
+    public void setDateModification(String dateModification) {
         this.dateModification = dateModification;
     }
 
@@ -123,4 +121,6 @@ public class ArticlePanier {
     public void setPrixTotal(double prixTotal) {
         this.prixTotal = prixTotal;
     }
+
+
 }

@@ -223,6 +223,28 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public boolean insertProduct(String name, String description, double price, String image1, String image2,
                                  String image3, String image4, int quantity, int categoryId, int userId, boolean isActive) {
+        if (name == null || name.trim().isEmpty()) {
+            Log.e(TAG, "Product name cannot be empty");
+            return false;
+        }
+        if (price < 0) {
+            Log.e(TAG, "Price cannot be negative");
+            return false;
+        }
+        if (quantity < 0) {
+            Log.e(TAG, "Quantity cannot be negative");
+            return false;
+        }
+        // Vérifier si categoryId et userId existent
+        if (!categoryExists(categoryId)) {
+            Log.e(TAG, "Category ID does not exist");
+            return false;
+        }
+        if (!userExists(userId)) {
+            Log.e(TAG, "User ID does not exist");
+            return false;
+        }
+
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
         try {
@@ -238,8 +260,8 @@ public class DBHelper extends SQLiteOpenHelper {
             values.put("category_id", categoryId);
             values.put("user_id", userId);
             values.put("is_active", isActive ? 1 : 0);
-            values.put("date_added", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
-            values.put("date_modified", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
+            values.put("date_added", getCurrentDate());
+            values.put("date_modified", getCurrentDate());
 
             long result = db.insertOrThrow("Products", null, values);
             db.setTransactionSuccessful();
@@ -253,6 +275,23 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
+    private boolean categoryExists(int categoryId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT id FROM Categories WHERE id = ?", new String[]{String.valueOf(categoryId)});
+        boolean exists = cursor.moveToFirst();
+        cursor.close();
+        db.close();
+        return exists;
+    }
+
+    private boolean userExists(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT id FROM users WHERE id = ?", new String[]{String.valueOf(userId)});
+        boolean exists = cursor.moveToFirst();
+        cursor.close();
+        db.close();
+        return exists;
+    }
     public boolean updateProduct(int id, String name, String description, double price,
                                  String image1, String image2, String image3, String image4,
                                  int quantity, long categoryId, long userId, boolean isActive) {
@@ -765,5 +804,72 @@ public class DBHelper extends SQLiteOpenHelper {
             }
             db.close();
         }
+    }
+
+
+
+    public Users getUserById(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query("users", null, "id=?", new String[]{String.valueOf(userId)}, null, null, null);
+        Users user = null;
+        try {
+            if (cursor != null && cursor.moveToFirst()) {
+                user = new Users();
+                user.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                user.setNom(cursor.getString(cursor.getColumnIndexOrThrow("nom")));
+                user.setPrenom(cursor.getString(cursor.getColumnIndexOrThrow("prenom")));
+                user.setEmail(cursor.getString(cursor.getColumnIndexOrThrow("email")));
+                user.setPassword(cursor.getString(cursor.getColumnIndexOrThrow("password")));
+                user.setRole(cursor.getString(cursor.getColumnIndexOrThrow("role")));
+                user.setAdresse(cursor.getString(cursor.getColumnIndexOrThrow("adresse")));
+                user.setTelephone(cursor.getString(cursor.getColumnIndexOrThrow("telephone")));
+                user.setVille(cursor.getString(cursor.getColumnIndexOrThrow("ville")));
+                user.setCodePostal(cursor.getString(cursor.getColumnIndexOrThrow("codePostal")));
+                user.setPays(cursor.getString(cursor.getColumnIndexOrThrow("pays")));
+                user.setImage(cursor.getString(cursor.getColumnIndexOrThrow("image")));
+                user.setDateInscription(cursor.getString(cursor.getColumnIndexOrThrow("dateInscription")));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching user by ID: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+        return user;
+    }
+
+    public List<ArticlePanier> getArticlesByPanierId(int panierId) {
+        List<ArticlePanier> articles = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery("SELECT * FROM article_panier WHERE panier_id = ? AND is_active = 1",
+                    new String[]{String.valueOf(panierId)});
+            if (cursor.moveToFirst()) {
+                do {
+                    ArticlePanier article = new ArticlePanier();
+                    article.setId(Long.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow("id"))));
+                    article.setProduit(getProductById(cursor.getInt(cursor.getColumnIndexOrThrow("produit_id"))));
+                    article.setPanier(new Panier(cursor.getInt(cursor.getColumnIndexOrThrow("panier_id"))));
+                    article.setQuantite(cursor.getInt(cursor.getColumnIndexOrThrow("quantite")));
+                    article.setPrixUnitaire(cursor.getDouble(cursor.getColumnIndexOrThrow("prix_unitaire")));
+                    article.setPrixTotal(cursor.getDouble(cursor.getColumnIndexOrThrow("prix_total")));
+                    article.setDateAjout(cursor.getString(cursor.getColumnIndexOrThrow("date_ajout")));
+                    article.setDateModification(cursor.getString(cursor.getColumnIndexOrThrow("date_modification")));
+                    article.setActive(cursor.getInt(cursor.getColumnIndexOrThrow("is_active")) == 1);
+                    articles.add(article);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching articles by panier ID: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+        return articles;
     }
 }
