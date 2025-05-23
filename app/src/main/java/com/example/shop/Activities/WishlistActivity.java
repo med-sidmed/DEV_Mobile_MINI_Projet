@@ -23,7 +23,9 @@ import com.example.shop.Models.Produits;
 import com.example.shop.Models.Users;
 import com.example.shop.R;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 public class WishlistActivity extends AppCompatActivity implements ProductMainAdapter.OnWishlistClickListener,
         ProductMainAdapter.OnProductClickListener {
@@ -35,6 +37,7 @@ public class WishlistActivity extends AppCompatActivity implements ProductMainAd
     private TextView emptyMessage;
     private ProductMainAdapter adapter;
     private SharedPreferences sharedPreferences;
+    private List<Produits> favoriteProducts;
 
     private static final String PREF_NAME = "UserPrefs";
     private static final String KEY_USER_ID = "userId";
@@ -45,10 +48,10 @@ public class WishlistActivity extends AppCompatActivity implements ProductMainAd
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_wishlist);
 
-        // Initialiser SharedPreferences
+        // Initialize SharedPreferences
         sharedPreferences = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
 
-        // Vérifier si l'utilisateur est connecté
+        // Check if user is logged in
         int userId = sharedPreferences.getInt(KEY_USER_ID, -1);
         if (userId == -1) {
             Toast.makeText(this, "Veuillez vous connecter pour voir vos favoris", Toast.LENGTH_SHORT).show();
@@ -58,10 +61,10 @@ public class WishlistActivity extends AppCompatActivity implements ProductMainAd
             return;
         }
 
-        // Initialiser DBHelper
+        // Initialize DBHelper
         dbHelper = new DBHelper(this);
 
-        // Initialiser les vues
+        // Initialize views
         btnBack = findViewById(R.id.btn_back);
         wishlistPage = findViewById(R.id.wishlest_page);
         cartPage = findViewById(R.id.cart_page);
@@ -71,13 +74,16 @@ public class WishlistActivity extends AppCompatActivity implements ProductMainAd
         emptyMessage = findViewById(R.id.emptyMessage);
         Log.d(TAG, "emptyMessage initialized: " + (emptyMessage != null));
 
-        // Configurer le RecyclerView
+        // Fetch favorite products
+        favoriteProducts = dbHelper.getFavoriteProducts(userId);
+        Log.d(TAG, "Favorite products count: " + (favoriteProducts != null ? favoriteProducts.size() : 0));
+
+        // Configure RecyclerView
         recyclerFavorites.setLayoutManager(new GridLayoutManager(this, 2));
-        List<Produits> favoriteProducts = dbHelper.getFavoriteProducts(userId);
         adapter = new ProductMainAdapter(favoriteProducts, this, this, this, userId);
         recyclerFavorites.setAdapter(adapter);
 
-        // Gérer l'affichage si la liste est vide
+        // Handle empty favorites list
         if (favoriteProducts == null || favoriteProducts.isEmpty()) {
             if (emptyMessage != null) {
                 emptyMessage.setVisibility(View.VISIBLE);
@@ -85,19 +91,21 @@ public class WishlistActivity extends AppCompatActivity implements ProductMainAd
             } else {
                 Log.e(TAG, "emptyMessage TextView is null. Check activity_wishlist.xml for missing ID emptyMessage.");
             }
+            btnAddToCart.setEnabled(false);
             Toast.makeText(this, "Aucun favori trouvé", Toast.LENGTH_SHORT).show();
         } else {
             if (emptyMessage != null) {
                 emptyMessage.setVisibility(View.GONE);
                 recyclerFavorites.setVisibility(View.VISIBLE);
             }
+            btnAddToCart.setEnabled(true);
         }
 
-        // Configurer les clics
+        // Set up click listeners
         btnBack.setOnClickListener(v -> finish());
 
         wishlistPage.setOnClickListener(v -> {
-            // Rester sur la page actuelle
+            // Already on wishlist page
         });
 
         cartPage.setOnClickListener(v -> {
@@ -111,6 +119,9 @@ public class WishlistActivity extends AppCompatActivity implements ProductMainAd
         });
 
         btnAddToCart.setOnClickListener(v -> {
+            // Refresh favorite products
+            favoriteProducts = dbHelper.getFavoriteProducts(userId);
+            Log.d(TAG, "btnAddToCart clicked, favorite products count: " + (favoriteProducts != null ? favoriteProducts.size() : 0));
             if (favoriteProducts == null || favoriteProducts.isEmpty()) {
                 Toast.makeText(this, "Aucun produit à ajouter au panier", Toast.LENGTH_SHORT).show();
                 return;
@@ -121,50 +132,82 @@ public class WishlistActivity extends AppCompatActivity implements ProductMainAd
 
     private void addFavoritesToCart(int userId, List<Produits> favoriteProducts) {
         try {
-            // Créer un panier si nécessaire
-            Panier panier = getOrCreatePanier(userId);
-            if (panier == null) {
+            // Get or create cart
+            int panierId = getOrCreatePanier(userId);
+            if (panierId == -1) {
+                Log.e(TAG, "Failed to create or retrieve cart");
                 Toast.makeText(this, "Erreur lors de la création du panier", Toast.LENGTH_SHORT).show();
                 return;
             }
+            Log.d(TAG, "Using panier_id: " + panierId);
 
-            // Ajouter chaque produit favori au panier
+            // Add each favorite product to the cart
+            int addedCount = 0;
+            String currentDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new java.util.Date());
             for (Produits produit : favoriteProducts) {
-                dbHelper.ajouterArticlePanier(new ArticlePanier(
-                        produit,
-                        panier,
-                        1, // Quantité par défaut
-                        produit.getPrix(),
-                        produit.getPrix(),
-                        new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date()),
-                        null,
-                        true
-                ));
+                Log.d(TAG, "Attempting to add product: " + produit.getNom() + ", ID: " + produit.getId());
+                // Comment out isProductInCart for testing
+                // if (!isProductInCart(panierId, produit.getId())) {
+                ArticlePanier article = new ArticlePanier();
+                article.setProduit(produit);
+                article.setPanier(new Panier(panierId));
+                article.setQuantite(1);
+                article.setPrixUnitaire(produit.getPrix());
+                article.setPrixTotal(produit.getPrix() * 1);
+                article.setDateAjout(currentDate);
+                article.setDateModification(currentDate);
+                article.setActive(true);
+
+                boolean success = dbHelper.ajouterArticlePanier(article);
+                if (success) {
+                    addedCount++;
+                    Log.d(TAG, "Added product to cart: " + produit.getNom() + ", panier_id: " + panierId);
+                } else {
+                    Log.e(TAG, "Failed to add product to cart: " + produit.getNom());
+                }
+                // } else {
+                //     Log.d(TAG, "Product already in cart: " + produit.getNom());
+                // }
             }
-            Toast.makeText(this, "Produits ajoutés au panier", Toast.LENGTH_SHORT).show();
-            // Rediriger vers le panier
-            Intent intent = new Intent(this, CardActivity.class);
-            startActivity(intent);
+
+            Toast.makeText(this, addedCount + " produit(s) ajouté(s) au panier", Toast.LENGTH_SHORT).show();
+            if (addedCount > 0) {
+                Intent intent = new Intent(this, CardActivity.class);
+                startActivity(intent);
+            }
         } catch (Exception e) {
-            Log.e(TAG, "Erreur lors de l'ajout des favoris au panier: " + e.getMessage());
+            Log.e(TAG, "Error adding favorites to cart: " + e.getMessage(), e);
             Toast.makeText(this, "Erreur lors de l'ajout au panier", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private Panier getOrCreatePanier(int userId) {
+    private int getOrCreatePanier(int userId) {
         List<Panier> paniers = dbHelper.getAllPaniers();
         for (Panier panier : paniers) {
             if (panier.getUtilisateur().getId() == userId && panier.isActive()) {
-                return panier;
+                Log.d(TAG, "Found existing panier_id: " + panier.getId());
+                return panier.getId();
             }
         }
-        // Créer un nouveau panier
         Panier newPanier = new Panier();
         newPanier.setUtilisateur(new Users(userId));
-        newPanier.setDateAjout(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date()));
+        String currentDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new java.util.Date());
+        newPanier.setDateAjout(currentDate);
+        newPanier.setDateModification(currentDate);
         newPanier.setActive(true);
-        dbHelper.ajouterPanier(newPanier);
-        return newPanier;
+        long panierId = dbHelper.ajouterPanier(newPanier);
+        Log.d(TAG, "Created new panier with ID: " + panierId);
+        return (int) panierId;
+    }
+
+    private boolean isProductInCart(int panierId, int productId) {
+        List<ArticlePanier> articles = dbHelper.getArticlesByPanierId(panierId);
+        for (ArticlePanier article : articles) {
+            if (article.getProduit().getId() == productId && article.isActive()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -186,21 +229,22 @@ public class WishlistActivity extends AppCompatActivity implements ProductMainAd
             success = dbHelper.removeFavorite(userId, produit.getId());
             Toast.makeText(this, success ? produit.getNom() + " retiré des favoris" :
                     "Erreur lors de la suppression des favoris", Toast.LENGTH_SHORT).show();
-            if (success) {
-                // Rafraîchir la liste des favoris
-                List<Produits> favoriteProducts = dbHelper.getFavoriteProducts(userId);
-                adapter.updateData(favoriteProducts);
-                if (favoriteProducts == null || favoriteProducts.isEmpty()) {
-                    if (emptyMessage != null) {
-                        emptyMessage.setVisibility(View.VISIBLE);
-                        recyclerFavorites.setVisibility(View.GONE);
-                    }
-                } else {
-                    if (emptyMessage != null) {
-                        emptyMessage.setVisibility(View.GONE);
-                        recyclerFavorites.setVisibility(View.VISIBLE);
-                    }
+        }
+        if (success) {
+            favoriteProducts = dbHelper.getFavoriteProducts(userId);
+            adapter.updateData(favoriteProducts);
+            if (favoriteProducts == null || favoriteProducts.isEmpty()) {
+                if (emptyMessage != null) {
+                    emptyMessage.setVisibility(View.VISIBLE);
+                    recyclerFavorites.setVisibility(View.GONE);
                 }
+                btnAddToCart.setEnabled(false);
+            } else {
+                if (emptyMessage != null) {
+                    emptyMessage.setVisibility(View.GONE);
+                    recyclerFavorites.setVisibility(View.VISIBLE);
+                }
+                btnAddToCart.setEnabled(true);
             }
         }
     }
@@ -215,26 +259,25 @@ public class WishlistActivity extends AppCompatActivity implements ProductMainAd
     @Override
     protected void onResume() {
         super.onResume();
-        // Rafraîchir la liste des favoris
         int userId = sharedPreferences.getInt(KEY_USER_ID, -1);
         if (userId != -1) {
-            List<Produits> favoriteProducts = dbHelper.getFavoriteProducts(userId);
+            favoriteProducts = dbHelper.getFavoriteProducts(userId);
             adapter.updateData(favoriteProducts);
             if (favoriteProducts == null || favoriteProducts.isEmpty()) {
                 if (emptyMessage != null) {
                     emptyMessage.setVisibility(View.VISIBLE);
                     recyclerFavorites.setVisibility(View.GONE);
                 }
+                btnAddToCart.setEnabled(false);
             } else {
                 if (emptyMessage != null) {
                     emptyMessage.setVisibility(View.GONE);
                     recyclerFavorites.setVisibility(View.VISIBLE);
                 }
+                btnAddToCart.setEnabled(true);
             }
         }
     }
-
-
 
     private void showCustomToast(String message) {
         Toast toast = new Toast(this);

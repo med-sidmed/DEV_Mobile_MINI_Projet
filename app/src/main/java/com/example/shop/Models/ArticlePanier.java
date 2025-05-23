@@ -2,7 +2,7 @@ package com.example.shop.Models;
 
 public class ArticlePanier {
 
-    private Long id;
+    private int id;
 
     private Produits produit;
 
@@ -50,12 +50,12 @@ public class ArticlePanier {
 
     }
 
-    public Long getId() {
-        return id;
+    public int getId() {
+        return Math.toIntExact(this.id);
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setId(int id) {
+        this.id=  id;
     }
 
     public Produits getProduit() {

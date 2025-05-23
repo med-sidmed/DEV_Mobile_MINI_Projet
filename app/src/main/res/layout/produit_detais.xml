@@ -50,6 +50,7 @@
                     android:contentDescription="Image du produit"
                     tools:src="@tools:sample/backgrounds/scenic" />
 
+
             </androidx.cardview.widget.CardView>
 
             <!-- Nom du produit -->

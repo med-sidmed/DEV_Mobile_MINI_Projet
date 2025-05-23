@@ -120,7 +120,7 @@ public class DBHelper extends SQLiteOpenHelper {
         // Si d'autres modifications sont nécessaires à l'avenir, elles peuvent être ajoutées ici
     }
 
-    private String getCurrentDate() {
+    public String getCurrentDate() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         return dateFormat.format(new Date());
     }
@@ -597,15 +597,17 @@ public class DBHelper extends SQLiteOpenHelper {
 
             long result = db.insertOrThrow("article_panier", null, values);
             db.setTransactionSuccessful();
+            Log.d(TAG, "Article added to panier: produit_id=" + article.getProduit().getId() + ", panier_id=" + article.getPanier().getId());
             return result != -1;
         } catch (Exception e) {
-            Log.e(TAG, "Erreur lors de l'ajout de l'article au panier: " + e.getMessage());
+            Log.e(TAG, "Erreur lors de l'ajout de l'article au panier: " + e.getMessage(), e);
             return false;
         } finally {
             db.endTransaction();
             db.close();
         }
     }
+
 
     public void ajouterUtilisateur(Users user) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -847,10 +849,11 @@ public class DBHelper extends SQLiteOpenHelper {
         try {
             cursor = db.rawQuery("SELECT * FROM article_panier WHERE panier_id = ? AND is_active = 1",
                     new String[]{String.valueOf(panierId)});
+            Log.d(TAG, "Nombre d'articles trouvés pour panier_id " + panierId + ": " + cursor.getCount());
             if (cursor.moveToFirst()) {
                 do {
                     ArticlePanier article = new ArticlePanier();
-                    article.setId(Long.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow("id"))));
+                    article.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
                     article.setProduit(getProductById(cursor.getInt(cursor.getColumnIndexOrThrow("produit_id"))));
                     article.setPanier(new Panier(cursor.getInt(cursor.getColumnIndexOrThrow("panier_id"))));
                     article.setQuantite(cursor.getInt(cursor.getColumnIndexOrThrow("quantite")));
@@ -872,4 +875,20 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         return articles;
     }
+    public boolean supprimerArticlePanier(int articleId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            int rowsAffected = db.delete("article_panier", "id = ?", new String[]{String.valueOf(articleId)});
+            db.setTransactionSuccessful();
+            return rowsAffected > 0;
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors de la suppression de l'article du panier: " + e.getMessage());
+            return false;
+        } finally {
+            db.endTransaction();
+            db.close();
+        }
+    }
+
 }
