@@ -251,7 +251,7 @@ public class WishlistActivity extends AppCompatActivity implements ProductMainAd
 
     @Override
     public void onProductClick(Produits produit) {
-        Intent intent = new Intent(this, ProductDetailActivity.class);
+        Intent intent = new Intent(WishlistActivity.this, ProduitDetailActivity.class);
         intent.putExtra("product_id", produit.getId());
         startActivity(intent);
     }

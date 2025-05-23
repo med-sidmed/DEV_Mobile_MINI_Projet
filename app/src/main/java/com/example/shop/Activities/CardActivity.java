@@ -29,7 +29,6 @@ import java.util.Locale;
 
 
 
-
 public class CardActivity extends AppCompatActivity {
     private static final String TAG = "CardActivity";
     private ImageView goBack, wishlestPage;

@@ -159,4 +159,25 @@ public class Produits {
     public void setUserId(int userId) {
         this.utilisateur=null;
     }
+
+    public int getStock() {
+        return this.quantite;
+    }
+
+    public int getPoids() {
+        return this.quantite;
+    }
+
+    public int getDimensions() {
+        return this.quantite;
+    }
+
+    public int getCouleur() {
+        return this.quantite;
+    }
+
+    public int getReference() {
+        return this.quantite;
+    }
+
 }

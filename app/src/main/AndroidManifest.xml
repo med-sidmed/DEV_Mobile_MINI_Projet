@@ -47,8 +47,7 @@
 
         <activity
             android:name=".Activities.CardActivity"
-            android:exported="false"
-            android:parentActivityName=".Activities.MainActivity" />
+            />
 
         <!-- Corrected potential typo in activity name -->
         <activity
@@ -70,6 +69,7 @@
             android:name=".Activities.SignupActivity"
             android:exported="false" />
 
+        <activity android:name=".Activities.ProduitDetailActivity" />
     </application>
 
 </manifest>
