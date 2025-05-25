@@ -787,7 +787,6 @@ public class DBHelper extends SQLiteOpenHelper {
         return produit;
     }
 
-
     public boolean isFavorite(int userId, int productId) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
@@ -890,5 +889,27 @@ public class DBHelper extends SQLiteOpenHelper {
             db.close();
         }
     }
+
+    public void updateProductImagePaths() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            ContentValues values = new ContentValues();
+            values.put("image1", "tshirt"); // Nom de la ressource sans extension
+            values.put("image2", (String) null);
+            values.put("image3", (String) null);
+            values.put("image4", (Boolean) null);
+            db.update("Products", values, "image1 LIKE ?", new String[]{"file://%"});
+            db.setTransactionSuccessful();
+            Log.d(TAG, "Product image paths updated successfully");
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors de la mise à jour des chemins d'image: " + e.getMessage());
+        } finally {
+            db.endTransaction();
+            db.close();
+        }
+    }
+
+
 
 }
