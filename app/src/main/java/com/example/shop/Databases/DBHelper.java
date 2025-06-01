@@ -30,21 +30,22 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String createProductsTable = "CREATE TABLE Products (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "name TEXT NOT NULL, " +
-                "description TEXT, " +
-                "price REAL NOT NULL, " +
-                "image1 TEXT, " +
-                "image2 TEXT, " +
-                "image3 TEXT, " +
-                "image4 TEXT, " +
-                "quantity INTEGER NOT NULL, " +
-                "date_added TEXT NOT NULL, " +
-                "date_modified TEXT, " +
-                "is_active INTEGER NOT NULL, " +
-                "category_id INTEGER NOT NULL, " +
-                "user_id INTEGER NOT NULL)";
+        String createProductsTable = "CREATE TABLE Products (\n" +
+                "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+                "    name TEXT NOT NULL,\n" +
+                "    description TEXT,\n" +
+                "    price REAL NOT NULL,\n" +
+                "    image1 TEXT,\n" +
+                "    image2 TEXT,\n" +
+                "    image3 TEXT,\n" +
+                "    image4 TEXT,\n" +
+                "    quantity INTEGER NOT NULL,\n" +
+                "    date_added TEXT NOT NULL,\n" +
+                "    date_modified TEXT,\n" +
+                "    is_active INTEGER NOT NULL,\n" +
+                "    category_id INTEGER NOT NULL,\n" +
+                "    user_id INTEGER NOT NULL\n" +
+                ")";
         db.execSQL(createProductsTable);
 
         String createCategoriesTable = "CREATE TABLE Categories (" +

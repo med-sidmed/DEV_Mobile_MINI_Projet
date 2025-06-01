@@ -220,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements ProductMainAdapte
 
     @Override
     public void onProductClick(Produits produit) {
-        Intent intent = new Intent(MainActivity.this, ProductDetailActivity.class);
+        Intent intent = new Intent(MainActivity.this, ProduitDetailActivity.class);
         intent.putExtra("product_id", produit.getId());
         startActivity(intent);
     }
