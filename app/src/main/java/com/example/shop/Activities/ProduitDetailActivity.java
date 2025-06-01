@@ -115,10 +115,12 @@ public class ProduitDetailActivity extends AppCompatActivity {
         textViewQuantity.setText(String.valueOf(quantity));
         textViewStockInfo.setText(product.getStock() + " disponibles");
         textViewDescription.setText(product.getDescription() != null ? product.getDescription() : "Aucune description disponible");
-        textViewWeight.setText(product.getPoids() );
-        textViewDimensions.setText(product.getDimensions() );
+        textViewWeight.setText(Integer.parseInt(String.valueOf(product.getPoids()))   );
+        textViewDimensions.setText(Integer.parseInt(String.valueOf(product.getDimensions())) );
         textViewColor.setText(product.getCouleur() );
         textViewReference.setText(product.getReference() );
+
+
 
         // Load images
         if (product.getImage1() != null && !product.getImage1().isEmpty()) {
