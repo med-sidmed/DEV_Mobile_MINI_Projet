@@ -108,18 +108,19 @@ public class ProduitDetailActivity extends AppCompatActivity {
         }
 
         // Populate views
+        // Populate views
         textViewProductName.setText(product.getNom() != null ? product.getNom() : "N/A");
         textViewPrice.setText(String.format("%.2f €", product.getPrix()));
-        textViewAvailability.setText(product.getStock() > 0 ? "En stock" : "Rupture de stock");
-        textViewAvailability.setBackgroundResource(product.getStock() > 0 ? R.drawable.availability_badge : R.drawable.out_of_stock_badge);
+        textViewAvailability.setText(product.getQuantite() > 0 ? "En stock" : "Rupture de stock");
+        textViewAvailability.setBackgroundResource(product.getQuantite() > 0 ? R.drawable.availability_badge : R.drawable.out_of_stock_badge);
         textViewQuantity.setText(String.valueOf(quantity));
-        textViewStockInfo.setText(product.getStock() + " disponibles");
+        textViewStockInfo.setText(product.getQuantite() + " disponibles");
         textViewDescription.setText(product.getDescription() != null ? product.getDescription() : "Aucune description disponible");
-        textViewWeight.setText(Integer.parseInt(String.valueOf(product.getPoids()))   );
-        textViewDimensions.setText(Integer.parseInt(String.valueOf(product.getDimensions())) );
-        textViewColor.setText(product.getCouleur() );
-        textViewReference.setText(product.getReference() );
-
+// Temporarily disable fields not in database
+        textViewWeight.setText("N/A"); // poids not in Products table
+        textViewDimensions.setText("N/A"); // dimensions not in Products table
+        textViewColor.setText("N/A"); // couleur not in Products table
+        textViewReference.setText("N/A"); // reference not in Products table
 
 
         // Load images
