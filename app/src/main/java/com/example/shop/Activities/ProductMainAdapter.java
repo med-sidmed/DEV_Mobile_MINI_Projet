@@ -1,6 +1,8 @@
 package com.example.shop.Activities;
 
 import android.content.Context;
+import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -74,12 +76,28 @@ public class ProductMainAdapter extends RecyclerView.Adapter<ProductMainAdapter.
         holder.textViewViews.setText("12"); // À remplacer par un champ réel si disponible
 
         // Charger l'image principale (image1) avec Glide
-        if (produit.getImage1() != null && !produit.getImage1().isEmpty()) {
-            Glide.with(context)
-                    .load(produit.getImage1())
-                    .placeholder(R.drawable.notification_icon)
-                    .error(R.drawable.image_not_found)
-                    .into(holder.imageViewProduct);
+        String imageSource = produit.getImage1();
+        if (imageSource != null && !imageSource.isEmpty()) {
+            if (imageSource.startsWith("drawable://")) {
+                String drawableName = imageSource.replace("drawable://", "");
+                int resourceId = context.getResources().getIdentifier(drawableName, "drawable", context.getPackageName());
+                if (resourceId != 0) {
+                    Glide.with(context)
+                            .load(resourceId)
+                            .placeholder(R.drawable.notification_icon)
+                            .error(R.drawable.image_not_found)
+                            .into(holder.imageViewProduct);
+                } else {
+                    Log.e("ProduitAdapter", "Ressource drawable non trouvée : " + drawableName);
+                    holder.imageViewProduct.setImageResource(R.drawable.image_not_found);
+                }
+            } else {
+                Glide.with(context)
+                        .load(imageSource.startsWith("file://") ? Uri.parse(imageSource) : imageSource)
+                        .placeholder(R.drawable.notification_icon)
+                        .error(R.drawable.image_not_found)
+                        .into(holder.imageViewProduct);
+            }
         } else {
             holder.imageViewProduct.setImageResource(R.drawable.image_not_found);
         }

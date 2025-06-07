@@ -435,7 +435,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 categoryId = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
             }
         } catch (Exception e) {
-            InputStreamReader(TAG, "Error fetching category ID by name: " + e.getMessage());
+            Log.e(TAG, "Error fetching category ID by name: " + e.getMessage(), e); // Correction ici
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -846,62 +846,69 @@ public class DBHelper extends SQLiteOpenHelper {
         List<ArticlePanier> articles = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
-        // Use INNER JOIN to ensure only valid products are included
-        String query = "SELECT p.*, pa.id AS panier_id, pa.quantite, pa.prix_unitaire " +
-                "FROM panier pa " +
-                "INNER JOIN produits p ON pa.produit_id = p.id " +
+        // Correction : Remplacer "produits" par "Products" dans la requête
+        String query = "SELECT p.*, pa.id AS article_panier_id, pa.quantite, pa.prix_unitaire " +
+                "FROM article_panier pa " +
+                "INNER JOIN Products p ON pa.produit_id = p.id " +
                 "WHERE pa.panier_id = ?";
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(panierId)});
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery(query, new String[]{String.valueOf(panierId)});
+            if (cursor.moveToFirst()) {
+                do {
+                    // Initialisation correcte des objets
+                    Produits produit = new Produits();
+                    produit.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                    produit.setNom(cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                    produit.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
+                    produit.setPrix(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
+                    produit.setQuantite(cursor.getInt(cursor.getColumnIndexOrThrow("quantity")));
+                    produit.setImage1(cursor.getString(cursor.getColumnIndexOrThrow("image1")));
+                    produit.setImage2(cursor.getString(cursor.getColumnIndexOrThrow("image2")));
+                    produit.setImage3(cursor.getString(cursor.getColumnIndexOrThrow("image3")));
+                    produit.setImage4(cursor.getString(cursor.getColumnIndexOrThrow("image4")));
+                    produit.setActive(cursor.getInt(cursor.getColumnIndexOrThrow("is_active")) == 1);
+                    produit.setCategoryId(cursor.getInt(cursor.getColumnIndexOrThrow("category_id")));
+                    produit.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
 
-        if (cursor.moveToFirst()) {
-            do {
-                int articleId = cursor.getInt(cursor.getColumnIndexOrThrow("panier_id"));
-                int produitId = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
-                String nom = cursor.getString(cursor.getColumnIndexOrThrow("nom"));
-                String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
-                double prix = cursor.getDouble(cursor.getColumnIndexOrThrow("prix"));
-                int quantiteStock = cursor.getInt(cursor.getColumnIndexOrThrow("quantite"));
-                String image1 = cursor.getString(cursor.getColumnIndexOrThrow("image1"));
-                String image2 = cursor.getString(cursor.getColumnIndexOrThrow("image2"));
-                String image3 = cursor.getString(cursor.getColumnIndexOrThrow("image3"));
-                String image4 = cursor.getString(cursor.getColumnIndexOrThrow("image4"));
-                int quantitePanier = cursor.getInt(cursor.getColumnIndexOrThrow("quantite"));
-                double prixUnitaire = cursor.getDouble(cursor.getColumnIndexOrThrow("prix_unitaire"));
+                    ArticlePanier article = new ArticlePanier();
+                    article.setId(cursor.getInt(cursor.getColumnIndexOrThrow("article_panier_id")));
+                    article.setProduit(produit);
+                    article.setPanier(new Panier(panierId)); // Assigner le panier_id
+                    article.setQuantite(cursor.getInt(cursor.getColumnIndexOrThrow("quantite")));
+                    article.setPrixUnitaire(cursor.getDouble(cursor.getColumnIndexOrThrow("prix_unitaire")));
 
-                Produits produit = null;
-                produit.setId(produitId);
-                produit.setNom(nom);
-                produit.setDescription(description);
-                produit.setPrix(prix);
-                produit.setQuantite(quantiteStock);
-                produit.setImage1(image1);
-                produit.setImage2(image2);
-                produit.setImage3(image3);
-                produit.setImage4(image4);
-
-
-                ArticlePanier article = null;
-                article.setId(articleId);
-                article.setProduit(produit);
-                article.setQuantite(quantitePanier);
-                article.setPrixUnitaire(prixUnitaire);
-                articles.add(article);
-            } while (cursor.moveToNext());
+                    articles.add(article);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors de la récupération des articles du panier: " + e.getMessage(), e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
         }
-        cursor.close();
-        db.close();
         Log.d("DBHelper", "Retrieved " + articles.size() + " articles for panier ID: " + panierId);
         return articles;
     }
 
-    // Method to clean up orphaned cart items
+    // Méthode corrigée : cleanOrphanedCartItems
     public void cleanOrphanedCartItems() {
         SQLiteDatabase db = this.getWritableDatabase();
-        String query = "DELETE FROM panier WHERE produit_id NOT IN (SELECT id FROM produits)";
-        db.execSQL(query);
-        db.close();
-        Log.d("DBHelper", "Cleaned orphaned cart items");
+        // Correction : Remplacer "produits" par "Products"
+        String query = "DELETE FROM article_panier WHERE produit_id NOT IN (SELECT id FROM Products)";
+        try {
+            db.execSQL(query);
+            Log.d("DBHelper", "Cleaned orphaned cart items");
+        } catch (Exception e) {
+            Log.e(TAG, "Erreur lors du nettoyage des articles orphelins: " + e.getMessage(), e);
+        } finally {
+            db.close();
+        }
     }
+
+    // Correction : Remplacer InputStreamReader par Log.e
 
 
 
