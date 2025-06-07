@@ -74,33 +74,38 @@ public class ProductMainAdapter extends RecyclerView.Adapter<ProductMainAdapter.
         holder.textViewPrice.setText(String.format("%.2f €", produit.getPrix()));
         holder.textViewRating.setText("4.6"); // À remplacer par un champ réel si disponible
         holder.textViewViews.setText("12"); // À remplacer par un champ réel si disponible
-
-        // Charger l'image principale (image1) avec Glide
+// Charger l'image principale (image1) avec Glide
         String imageSource = produit.getImage1();
         if (imageSource != null && !imageSource.isEmpty()) {
             if (imageSource.startsWith("drawable://")) {
+                // Extraire le nom du drawable
                 String drawableName = imageSource.replace("drawable://", "");
                 int resourceId = context.getResources().getIdentifier(drawableName, "drawable", context.getPackageName());
+
                 if (resourceId != 0) {
                     Glide.with(context)
                             .load(resourceId)
-                            .placeholder(R.drawable.notification_icon)
-                            .error(R.drawable.image_not_found)
+                            .placeholder(R.drawable.notification_icon)  // image de chargement
+                            .error(R.drawable.image_not_found)         // image d'erreur
                             .into(holder.imageViewProduct);
                 } else {
                     Log.e("ProduitAdapter", "Ressource drawable non trouvée : " + drawableName);
                     holder.imageViewProduct.setImageResource(R.drawable.image_not_found);
                 }
             } else {
+                // Charger à partir d'une URL ou d'un fichier local (file://)
+                Uri imageUri = imageSource.startsWith("file://") ? Uri.parse(imageSource) : Uri.parse(imageSource);
                 Glide.with(context)
-                        .load(imageSource.startsWith("file://") ? Uri.parse(imageSource) : imageSource)
+                        .load(imageUri)
                         .placeholder(R.drawable.notification_icon)
                         .error(R.drawable.image_not_found)
                         .into(holder.imageViewProduct);
             }
         } else {
+            // Image vide ou null
             holder.imageViewProduct.setImageResource(R.drawable.image_not_found);
         }
+
 
         // Vérifier si le produit est dans les favoris
         boolean isInWishlist = currentUserId != -1 && dbHelper.isFavorite(currentUserId, produit.getId());

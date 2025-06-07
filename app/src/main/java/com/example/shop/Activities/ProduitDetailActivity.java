@@ -2,8 +2,11 @@ package com.example.shop.Activities;
 
 import android.annotation.SuppressLint;
 
+import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -25,6 +28,7 @@ public class ProduitDetailActivity extends AppCompatActivity {
     private Produits product;
     private int quantity = 1;
 
+    Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,24 +128,13 @@ public class ProduitDetailActivity extends AppCompatActivity {
 
 
         // Load images
-        if (product.getImage1() != null && !product.getImage1().isEmpty()) {
-            Glide.with(this)
-                    .load(product.getImage1())
-                    .placeholder(R.drawable.image_not_found)
-                    .into(imageViewProduct);
-        }
-        if (product.getImage2() != null && !product.getImage2().isEmpty()) {
-            Glide.with(this)
-                    .load(product.getImage2())
-                    .placeholder(R.drawable.image_not_found)
-                    .into(imageViewSecondary1);
-        }
-        if (product.getImage3() != null && !product.getImage3().isEmpty()) {
-            Glide.with(this)
-                    .load(product.getImage3())
-                    .placeholder(R.drawable.image_not_found)
-                    .into(imageViewSecondary2);
-        }
+        loadImage(product.getImage1(), imageViewProduct);
+        loadImage(product.getImage2(), imageViewSecondary1);
+        loadImage(product.getImage3(), imageViewSecondary2);
+
+        Log.d(TAG, "Image1: " + product.getImage1());
+        Log.d(TAG, "Image2: " + product.getImage2());
+        Log.d(TAG, "Image3: " + product.getImage3());
 
         // Quantity controls
         buttonMinus.setOnClickListener(v -> {
@@ -167,7 +160,45 @@ public class ProduitDetailActivity extends AppCompatActivity {
         });
     }
 
-    
+    // Méthode utilitaire pour charger une image à partir d'une URL ou d'un nom de ressource drawable
+    private void loadImage(Object imageSource, ImageView imageView) {
+        if (imageSource == null) {
+            Glide.with(this)
+                    .load(R.drawable.image_not_found)
+                    .into(imageView);
+            return;
+        }
+
+        String imageStr = imageSource.toString().trim();
+
+        // 🔥 Enlève le préfixe "drawable://" s'il existe
+        if (imageStr.startsWith("drawable://")) {
+            imageStr = imageStr.replace("drawable://", "");
+        }
+
+        // Si c’est une URL distante
+        if (imageStr.startsWith("http://") || imageStr.startsWith("https://")) {
+            Glide.with(this)
+                    .load(imageStr)
+                    .placeholder(R.drawable.image_not_found)
+                    .into(imageView);
+        } else {
+            // Sinon on suppose que c'est une ressource dans drawable
+            int resId = getResources().getIdentifier(imageStr, "drawable", getPackageName());
+            if (resId != 0) {
+                Glide.with(this)
+                        .load(resId)
+                        .placeholder(R.drawable.image_not_found)
+                        .into(imageView);
+            } else {
+                Glide.with(this)
+                        .load(R.drawable.image_not_found)
+                        .into(imageView);
+            }
+        }
+    }
+
+
 
 
 }
