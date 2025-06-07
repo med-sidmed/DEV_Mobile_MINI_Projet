@@ -1,6 +1,8 @@
 package com.example.shop.Adapter;
 
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,15 +12,21 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.example.shop.Activities.CardActivity;
 import com.example.shop.Activities.ProduitDetailActivity;
 import com.example.shop.Databases.DBHelper;
 import com.example.shop.Models.ArticlePanier;
 import com.example.shop.R;
 
+import java.io.File;
 import java.util.List;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder> {
@@ -62,15 +70,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         holder.productPrice.setText(String.format("%.2f €", article.getPrixUnitaire()));
         holder.quantity.setText("Quantité: " + article.getQuantite());
 
-        String imagePath = article.getProduit().getImage1();
-        if (imagePath != null && !imagePath.isEmpty()) {
-            Glide.with(holder.itemView.getContext())
-                    .load(imagePath)
-                    .placeholder(R.drawable.image_not_found)
-                    .into(holder.productImage);
-        } else {
-            holder.productImage.setImageResource(R.drawable.image_head);
-        }
+        loadImage(holder.productImage, article.getProduit().getImage1());
 
         holder.btnRemove.setOnClickListener(v -> {
             dbHelper.supprimerArticlePanier(article.getId());
@@ -120,5 +120,87 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
             Log.d(TAG, "CartViewHolder initialized - btnRemove: " + (btnRemove != null));
             Log.d(TAG, "CartViewHolder initialized - btnDetails: " + (btnDetails != null));
         }
+    }
+
+
+    private void loadImage(ImageView imageView, String imageSource) {
+        if (imageSource == null || imageSource.isEmpty()) {
+            imageView.setImageResource(R.drawable.image_not_found);
+            imageView.setVisibility(View.GONE);
+            Log.d(TAG, "Image source is null or empty for ImageView: " + imageView.getId());
+            return;
+        }
+
+        imageView.setVisibility(View.VISIBLE);
+        Log.d(TAG, "Loading image: " + imageSource);
+
+        // Handle drawable resources
+        if (imageSource.startsWith("drawable://")) {
+            String drawableName = imageSource.replace("drawable://", "");
+            int resourceId = imageView.getContext().getResources().getIdentifier(
+                    drawableName, "drawable", imageView.getContext().getPackageName());
+            if (resourceId != 0) {
+                Glide.with(imageView.getContext())
+                        .load(resourceId)
+                        .placeholder(R.drawable.notification_icon)
+                        .error(R.drawable.image_not_found)
+                        .listener(new RequestListener<Drawable>() {
+                            @Override
+                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                Log.e(TAG, "Failed to load drawable: " + drawableName + ", Error: " + (e != null ? e.getMessage() : "Unknown"));
+                                imageView.setImageResource(R.drawable.image_not_found);
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                Log.d(TAG, "Drawable loaded successfully: " + drawableName);
+                                return false;
+                            }
+                        })
+                        .into(imageView);
+            } else {
+                Log.e(TAG, "Drawable resource not found: " + drawableName);
+                imageView.setImageResource(R.drawable.image_not_found);
+            }
+            return;
+        }
+
+        // Handle URLs and URIs
+        Object glideSource;
+        if (imageSource.startsWith("http://") || imageSource.startsWith("https://")) {
+            glideSource = imageSource;
+        } else if (imageSource.startsWith("file://")) {
+            glideSource = Uri.parse(imageSource);
+        } else {
+            // Assume it's a local file path (not recommended, but for backward compatibility)
+            File file = new File(imageSource);
+            if (!file.exists()) {
+                Log.e(TAG, "File does not exist: " + imageSource);
+                imageView.setImageResource(R.drawable.image_not_found);
+                return;
+            }
+            glideSource = Uri.fromFile(file);
+        }
+
+        Glide.with(imageView.getContext())
+                .load(glideSource)
+                .placeholder(R.drawable.notification_icon)
+                .error(R.drawable.image_not_found)
+                .listener(new RequestListener<Drawable>() {
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                        Log.e(TAG, "Failed to load image: " + imageSource + ", Error: " + (e != null ? e.getMessage() : "Unknown"));
+                        imageView.setImageResource(R.drawable.image_not_found);
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                        Log.d(TAG, "Image loaded successfully: " + imageSource);
+                        return false;
+                    }
+                })
+                .into(imageView);
     }
 }
