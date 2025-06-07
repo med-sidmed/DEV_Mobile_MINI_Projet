@@ -41,14 +41,15 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
     private ProduitAdapter produitAdapter;
     private CategorieAdapter categorieAdapter;
     Button retourner;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_controller);
-        retourner=findViewById(R.id.retourner);
+        retourner = findViewById(R.id.retourner);
 
-        retourner.setOnClickListener(v->{
-            Intent intent=new Intent(Controller.this, MainActivity.class);
+        retourner.setOnClickListener(v -> {
+            Intent intent = new Intent(Controller.this, MainActivity.class);
             startActivity(intent);
         });
 
@@ -109,21 +110,21 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                     String image3Text = image3.getText().toString().trim();
                     String image4Text = image4.getText().toString().trim();
 
-                    // Validate image URLs
-                    if (!image1Text.isEmpty() && !image1Text.matches("^(https?://.*|file://.*)$")) {
-                        Toast.makeText(this, "URL de l'image 1 invalide", Toast.LENGTH_SHORT).show();
+                    // Validate inputs
+                    if (!validateImageInput(image1Text)) {
+                        Toast.makeText(this, "Image 1 : Entrez une URL valide, un chemin de fichier, ou un nom de ressource drawable", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    if (!image2Text.isEmpty() && !image2Text.matches("^(https?://.*|file://.*)$")) {
-                        Toast.makeText(this, "URL de l'image 2 invalide", Toast.LENGTH_SHORT).show();
+                    if (!validateImageInput(image2Text)) {
+                        Toast.makeText(this, "Image 2 : Entrez une URL valide, un chemin de fichier, ou un nom de ressource drawable", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    if (!image3Text.isEmpty() && !image3Text.matches("^(https?://.*|file://.*)$")) {
-                        Toast.makeText(this, "URL de l'image 3 invalide", Toast.LENGTH_SHORT).show();
+                    if (!validateImageInput(image3Text)) {
+                        Toast.makeText(this, "Image 3 : Entrez une URL valide, un chemin de fichier, ou un nom de ressource drawable", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    if (!image4Text.isEmpty() && !image4Text.matches("^(https?://.*|file://.*)$")) {
-                        Toast.makeText(this, "URL de l'image 4 invalide", Toast.LENGTH_SHORT).show();
+                    if (!validateImageInput(image4Text)) {
+                        Toast.makeText(this, "Image 4 : Entrez une URL valide, un chemin de fichier, ou un nom de ressource drawable", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
@@ -193,6 +194,12 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                         return;
                     }
 
+                    // Format drawable resources with prefix
+                    image1Text = formatImageInput(image1Text);
+                    image2Text = formatImageInput(image2Text);
+                    image3Text = formatImageInput(image3Text);
+                    image4Text = formatImageInput(image4Text);
+
                     boolean insert = dbHelper.insertProduct(
                             nomProduit,
                             descriptionProduit,
@@ -224,7 +231,7 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
             builder.show();
         });
 
-        // Category addition dialog
+        // Category addition dialog (unchanged)
         btnAjouterCategorie.setOnClickListener(view -> {
             LayoutInflater inflater = LayoutInflater.from(this);
             View formView = inflater.inflate(R.layout.add_categorie, null);
@@ -263,6 +270,27 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
             builder.setNegativeButton("Annuler", null);
             builder.show();
         });
+    }
+
+    // Validate image input: accepts URLs, file URIs, or drawable resource names
+    private boolean validateImageInput(String imageText) {
+        if (TextUtils.isEmpty(imageText)) {
+            return true; // Empty is valid
+        }
+        // Accept HTTP/HTTPS URLs, file URIs, or drawable resource names (alphanumeric with underscores)
+        return imageText.matches("^(https?://.*|file://.*|[a-zA-Z0-9_]+)$");
+    }
+
+    // Format image input: add "drawable://" prefix for drawable resource names
+    private String formatImageInput(String imageText) {
+        if (TextUtils.isEmpty(imageText)) {
+            return null;
+        }
+        // If it's not a URL or file URI, assume it's a drawable resource and add prefix
+        if (!imageText.matches("^(https?://.*|file://.*)$")) {
+            return "drawable://" + imageText;
+        }
+        return imageText;
     }
 
     private void ShowProduitList() {
@@ -336,10 +364,11 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
         description.setText(produit.getDescription() != null ? produit.getDescription() : "");
         prix.setText(String.format("%.2f", produit.getPrix()));
         quantite.setText(String.valueOf(produit.getQuantite()));
-        image1.setText(produit.getImage1() != null ? produit.getImage1() : "");
-        image2.setText(produit.getImage2() != null ? produit.getImage2() : "");
-        image3.setText(produit.getImage3() != null ? produit.getImage3() : "");
-        image4.setText(produit.getImage4() != null ? produit.getImage4() : "");
+        // Remove "drawable://" prefix for display
+        image1.setText(produit.getImage1() != null ? produit.getImage1().replace("drawable://", "") : "");
+        image2.setText(produit.getImage2() != null ? produit.getImage2().replace("drawable://", "") : "");
+        image3.setText(produit.getImage3() != null ? produit.getImage3().replace("drawable://", "") : "");
+        image4.setText(produit.getImage4() != null ? produit.getImage4().replace("drawable://", "") : "");
 
         // Pre-check the appropriate category checkbox
         int currentCategoryId = produit.getCategorie().getId();
@@ -369,21 +398,21 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                 String image3Text = image3.getText().toString().trim();
                 String image4Text = image4.getText().toString().trim();
 
-                // Validate image URLs
-                if (!image1Text.isEmpty() && !image1Text.matches("^(https?://.*|file://.*)$")) {
-                    Toast.makeText(this, "URL de l'image 1 invalide", Toast.LENGTH_SHORT).show();
+                // Validate inputs
+                if (!validateImageInput(image1Text)) {
+                    Toast.makeText(this, "Image 1 : Entrez une URL valide, un chemin de fichier, ou un nom de ressource drawable", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if (!image2Text.isEmpty() && !image2Text.matches("^(https?://.*|file://.*)$")) {
-                    Toast.makeText(this, "URL de l'image 2 invalide", Toast.LENGTH_SHORT).show();
+                if (!validateImageInput(image2Text)) {
+                    Toast.makeText(this, "Image 2 : Entrez une URL valide, un chemin de fichier, ou un nom de ressource drawable", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if (!image3Text.isEmpty() && !image3Text.matches("^(https?://.*|file://.*)$")) {
-                    Toast.makeText(this, "URL de l'image 3 invalide", Toast.LENGTH_SHORT).show();
+                if (!validateImageInput(image3Text)) {
+                    Toast.makeText(this, "Image 3 : Entrez une URL valide, un chemin de fichier, ou un nom de ressource drawable", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if (!image4Text.isEmpty() && !image4Text.matches("^(https?://.*|file://.*)$")) {
-                    Toast.makeText(this, "URL de l'image 4 invalide", Toast.LENGTH_SHORT).show();
+                if (!validateImageInput(image4Text)) {
+                    Toast.makeText(this, "Image 4 : Entrez une URL valide, un chemin de fichier, ou un nom de ressource drawable", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -444,6 +473,12 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                     Log.e(TAG, "No valid category selected for update");
                     return;
                 }
+
+                // Format drawable resources with prefix
+                image1Text = formatImageInput(image1Text);
+                image2Text = formatImageInput(image2Text);
+                image3Text = formatImageInput(image3Text);
+                image4Text = formatImageInput(image4Text);
 
                 boolean update = dbHelper.updateProduct(
                         produit.getId(),

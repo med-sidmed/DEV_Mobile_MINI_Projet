@@ -845,36 +845,66 @@ public class DBHelper extends SQLiteOpenHelper {
     public List<ArticlePanier> getArticlesByPanierId(int panierId) {
         List<ArticlePanier> articles = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = null;
-        try {
-            cursor = db.rawQuery("SELECT * FROM article_panier WHERE panier_id = ? AND is_active = 1",
-                    new String[]{String.valueOf(panierId)});
-            Log.d(TAG, "Nombre d'articles trouvés pour panier_id " + panierId + ": " + cursor.getCount());
-            if (cursor.moveToFirst()) {
-                do {
-                    ArticlePanier article = new ArticlePanier();
-                    article.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                    article.setProduit(getProductById(cursor.getInt(cursor.getColumnIndexOrThrow("produit_id"))));
-                    article.setPanier(new Panier(cursor.getInt(cursor.getColumnIndexOrThrow("panier_id"))));
-                    article.setQuantite(cursor.getInt(cursor.getColumnIndexOrThrow("quantite")));
-                    article.setPrixUnitaire(cursor.getDouble(cursor.getColumnIndexOrThrow("prix_unitaire")));
-                    article.setPrixTotal(cursor.getDouble(cursor.getColumnIndexOrThrow("prix_total")));
-                    article.setDateAjout(cursor.getString(cursor.getColumnIndexOrThrow("date_ajout")));
-                    article.setDateModification(cursor.getString(cursor.getColumnIndexOrThrow("date_modification")));
-                    article.setActive(cursor.getInt(cursor.getColumnIndexOrThrow("is_active")) == 1);
-                    articles.add(article);
-                } while (cursor.moveToNext());
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error fetching articles by panier ID: " + e.getMessage());
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-            db.close();
+
+        // Use INNER JOIN to ensure only valid products are included
+        String query = "SELECT p.*, pa.id AS panier_id, pa.quantite, pa.prix_unitaire " +
+                "FROM panier pa " +
+                "INNER JOIN produits p ON pa.produit_id = p.id " +
+                "WHERE pa.panier_id = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(panierId)});
+
+        if (cursor.moveToFirst()) {
+            do {
+                int articleId = cursor.getInt(cursor.getColumnIndexOrThrow("panier_id"));
+                int produitId = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+                String nom = cursor.getString(cursor.getColumnIndexOrThrow("nom"));
+                String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
+                double prix = cursor.getDouble(cursor.getColumnIndexOrThrow("prix"));
+                int quantiteStock = cursor.getInt(cursor.getColumnIndexOrThrow("quantite"));
+                String image1 = cursor.getString(cursor.getColumnIndexOrThrow("image1"));
+                String image2 = cursor.getString(cursor.getColumnIndexOrThrow("image2"));
+                String image3 = cursor.getString(cursor.getColumnIndexOrThrow("image3"));
+                String image4 = cursor.getString(cursor.getColumnIndexOrThrow("image4"));
+                int quantitePanier = cursor.getInt(cursor.getColumnIndexOrThrow("quantite"));
+                double prixUnitaire = cursor.getDouble(cursor.getColumnIndexOrThrow("prix_unitaire"));
+
+                Produits produit = null;
+                produit.setId(produitId);
+                produit.setNom(nom);
+                produit.setDescription(description);
+                produit.setPrix(prix);
+                produit.setQuantite(quantiteStock);
+                produit.setImage1(image1);
+                produit.setImage2(image2);
+                produit.setImage3(image3);
+                produit.setImage4(image4);
+
+
+                ArticlePanier article = null;
+                article.setId(articleId);
+                article.setProduit(produit);
+                article.setQuantite(quantitePanier);
+                article.setPrixUnitaire(prixUnitaire);
+                articles.add(article);
+            } while (cursor.moveToNext());
         }
+        cursor.close();
+        db.close();
+        Log.d("DBHelper", "Retrieved " + articles.size() + " articles for panier ID: " + panierId);
         return articles;
     }
+
+    // Method to clean up orphaned cart items
+    public void cleanOrphanedCartItems() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "DELETE FROM panier WHERE produit_id NOT IN (SELECT id FROM produits)";
+        db.execSQL(query);
+        db.close();
+        Log.d("DBHelper", "Cleaned orphaned cart items");
+    }
+
+
+
     public boolean supprimerArticlePanier(int articleId) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();

@@ -40,6 +40,8 @@ public class Produits {
 
 
 
+
+
     public int getId() {
         return id;
     }

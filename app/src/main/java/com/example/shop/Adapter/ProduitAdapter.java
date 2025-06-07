@@ -2,6 +2,7 @@ package com.example.shop.Adapter;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,8 +34,8 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
     }
 
     public ProduitAdapter(List<Produits> produitsList, Context context, OnProductActionListener listener) {
-        this.produitsList = produitsList != null ? produitsList : new ArrayList<>();
-        this.context = context;
+        this.produitsList = produitsList ;
+         this.context = context;
         this.actionListener = listener;
     }
 
@@ -46,7 +47,6 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
         notifyDataSetChanged();
     }
 
-    @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.item_produit, parent, false);
@@ -62,10 +62,32 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
         holder.prixTextView.setText(String.format("%.2f", produit.getPrix()));
         holder.quantiteTextView.setText(String.valueOf(produit.getQuantite()));
 
-        loadImage(holder.imageView1, produit.getImage1());
-        loadImage(holder.imageView2, produit.getImage2());
-        loadImage(holder.imageView3, produit.getImage3());
-        loadImage(holder.imageView4, produit.getImage4());
+        // Load image
+        String imageSource = produit.getImage1();
+        if (imageSource != null && !imageSource.isEmpty()) {
+            if (imageSource.startsWith("drawable://")) {
+                String drawableName = imageSource.replace("drawable://", "");
+                int resourceId = context.getResources().getIdentifier(drawableName, "drawable", context.getPackageName());
+                if (resourceId != 0) {
+                    Glide.with(context)
+                            .load(resourceId)
+                            .placeholder(R.drawable.notification_icon)
+                            .error(R.drawable.image_not_found)
+                            .into(holder.imageView1);
+                } else {
+                    Log.e("ProduitAdapter", "Ressource drawable non trouvée : " + drawableName);
+                    holder.imageView1.setImageResource(R.drawable.image_not_found);
+                }
+            } else {
+                Glide.with(context)
+                        .load(imageSource.startsWith("file://") ? Uri.parse(imageSource) : imageSource)
+                        .placeholder(R.drawable.notification_icon)
+                        .error(R.drawable.image_not_found)
+                        .into(holder.imageView1);
+            }
+        } else {
+            holder.imageView1.setImageResource(R.drawable.image_not_found);
+        }
 
         holder.editButton.setOnClickListener(v -> {
             Log.d("ProduitAdapter", "Edit clicked for product ID: " + produit.getId());

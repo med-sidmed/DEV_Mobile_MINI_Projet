@@ -15,6 +15,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.shop.Adapter.CartAdapter;
 import com.example.shop.Databases.DBHelper;
 import com.example.shop.Models.ArticlePanier;
@@ -24,10 +25,9 @@ import com.example.shop.R;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-
 
 public class CardActivity extends AppCompatActivity {
     private static final String TAG = "CardActivity";
@@ -65,10 +65,16 @@ public class CardActivity extends AppCompatActivity {
         shippingPrice = findViewById(R.id.shippingPrice);
         totalPrice = findViewById(R.id.totalPrice);
 
+        cartItems = new ArrayList<>(); // Initialize cartItems
+        recyclerViewCart.setLayoutManager(new LinearLayoutManager(this));
+        cartAdapter = new CartAdapter(cartItems, dbHelper);
+        recyclerViewCart.setAdapter(cartAdapter);
+
         int userId = getCurrentUserId();
         Log.d(TAG, "User ID: " + userId);
-
-        refreshCart(userId);
+        if (userId != -1) {
+            refreshCart(userId);
+        }
 
         goBack.setOnClickListener(v -> {
             Intent intent = new Intent(CardActivity.this, MainActivity.class);
@@ -116,15 +122,24 @@ public class CardActivity extends AppCompatActivity {
     private void refreshCart(int userId) {
         int panierId = getPanierIdForUser(userId);
         Log.d(TAG, "Panier ID: " + panierId);
-        cartItems = dbHelper.getArticlesByPanierId(panierId);
-        Log.d(TAG, "Nombre d'articles dans le panier: " + cartItems.size());
-        for (ArticlePanier article : cartItems) {
-            Log.d(TAG, "Article: " + article.getProduit().getNom() + ", Quantité: " + article.getQuantite());
+        cartItems.clear();
+        List<ArticlePanier> items = dbHelper.getArticlesByPanierId(panierId);
+        if (items != null) {
+            // Filter out items with null Produits
+            for (ArticlePanier article : items) {
+                if (article.getProduit() != null) {
+                    cartItems.add(article);
+                    Log.d(TAG, "Article: " + article.getProduit().getNom() + ", Quantité: " + article.getQuantite());
+                } else {
+                    Log.e(TAG, "Skipping article with ID: " + article.getId() + " due to null Produit");
+                    // Optionally, remove invalid article from database
+                    dbHelper.supprimerArticlePanier(article.getId());
+                }
+            }
         }
+        Log.d(TAG, "Nombre d'articles dans le panier: " + cartItems.size());
 
-        recyclerViewCart.setLayoutManager(new LinearLayoutManager(this));
-        cartAdapter = new CartAdapter(cartItems, dbHelper);
-        recyclerViewCart.setAdapter(cartAdapter);
+        cartAdapter.notifyDataSetChanged();
 
         if (cartItems.isEmpty()) {
             emptyCartView.setVisibility(View.VISIBLE);
@@ -176,7 +191,11 @@ public class CardActivity extends AppCompatActivity {
         double subtotal = 0.0;
         double shipping = 5.0;
         for (ArticlePanier article : cartItems) {
-            subtotal += article.getPrixTotal();
+            if (article.getProduit() != null) {
+                subtotal += article.getPrixTotal();
+            } else {
+                Log.w(TAG, "Skipping article with ID: " + article.getId() + " in summary due to null Produit");
+            }
         }
         double total = subtotal + shipping;
 
