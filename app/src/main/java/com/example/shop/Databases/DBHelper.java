@@ -748,8 +748,7 @@ public class DBHelper extends SQLiteOpenHelper {
             if (cursor != null) {
                 cursor.close();
             }
-            // Do not close db; let SQLiteOpenHelper manage it
-        }
+         }
 
         return category;
     }

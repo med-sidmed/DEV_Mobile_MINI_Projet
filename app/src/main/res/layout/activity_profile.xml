@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="@color/background_light">
 
     <!-- Title -->
     <LinearLayout
@@ -14,17 +15,18 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="16dp"
+        android:paddingBottom="16dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
             android:id="@+id/go_back"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:src="@drawable/arrow_back"
-            android:contentDescription="Retour" />
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_arrow_back"
+            android:contentDescription="Retour à l'accueil"
+            android:padding="4dp" />
 
         <TextView
             android:layout_width="0dp"
@@ -34,7 +36,7 @@
             android:text="Mon Profil"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:textColor="@android:color/black"
+            android:textColor="@color/text_primary"
             android:paddingStart="16dp" />
     </LinearLayout>
 
@@ -43,6 +45,7 @@
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:fillViewport="true"
         app:layout_constraintTop_toBottomOf="@id/titleLayout"
         app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
         app:layout_constraintStart_toStartOf="parent"
@@ -51,7 +54,9 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@color/card_background">
 
             <!-- User Info -->
             <LinearLayout
@@ -59,16 +64,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="8dp"
-                android:layout_marginBottom="16dp">
+                android:padding="12dp"
+                android:layout_marginBottom="24dp">
 
                 <ImageView
                     android:id="@+id/userProfileImage"
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:src="@android:drawable/sym_def_app_icon"
-                    android:contentDescription="Photo de profil"
-                    android:scaleType="centerCrop" />
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/profile_icon"
+                    android:contentDescription="Photo de profil de l'utilisateur"
+                    android:scaleType="centerCrop"
+                    android:background="@drawable/circle_background" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -82,18 +88,71 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Nom d'utilisateur"
-                        android:textSize="18sp"
+                        android:textSize="20sp"
                         android:textStyle="bold"
-                        android:textColor="@android:color/black" />
+                        android:textColor="@color/text_primary" />
 
                     <TextView
                         android:id="@+id/userEmail"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="email@exemple.com"
-                        android:textSize="14sp"
-                        android:textColor="#757575" />
+                        android:textSize="16sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="4dp" />
                 </LinearLayout>
+            </LinearLayout>
+
+            <!-- Additional User Info -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <TextView
+                    android:id="@+id/userAddress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Adresse: Non définie"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/userPhone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Téléphone: Non défini"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/userCity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ville: Non définie"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/userPostalCode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Code postal: Non défini"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/userCountry"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pays: Non défini"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_secondary" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
@@ -102,12 +161,14 @@
     <LinearLayout
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="64dp"
         android:orientation="horizontal"
-        android:background="@drawable/footer_background"
+        android:background="@drawable/bottom_nav_background"
         android:elevation="8dp"
         android:gravity="center"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <!-- Explore -->
         <LinearLayout
@@ -116,20 +177,22 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="8dp">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:src="@drawable/home_icon"
-                android:contentDescription="Explorer" />
+                android:contentDescription="Aller à la page d'accueil" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Explore"
-                android:textColor="#757575"
-                android:textSize="12sp" />
+                android:text="Accueil"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp" />
         </LinearLayout>
 
         <!-- Wishlist -->
@@ -139,21 +202,23 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="8dp">
 
             <ImageView
-                android:id="@+id/wishlistpage"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:id="@+id/wishlist_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:src="@drawable/wishlist"
-                android:contentDescription="Liste de souhaits" />
+                android:contentDescription="Aller à la liste de souhaits" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Wishlist"
-                android:textColor="#757575"
-                android:textSize="12sp" />
+                android:text="Liste de souhaits"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp" />
         </LinearLayout>
 
         <!-- Cart -->
@@ -164,21 +229,22 @@
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical"
-            tools:ignore="UseCompoundDrawables">
+            android:padding="8dp">
 
             <ImageView
-                android:id="@+id/cartPage"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:id="@+id/cart_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:src="@drawable/cart_icon"
-                android:contentDescription="Panier" />
+                android:contentDescription="Aller au panier" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Panier"
-                android:textColor="#757575"
-                android:textSize="12sp" />
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp" />
         </LinearLayout>
 
         <!-- Profile -->
@@ -188,21 +254,23 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:background="@android:color/holo_blue_light"
-            android:orientation="vertical">
+            android:background="@color/primary_light"
+            android:orientation="vertical"
+            android:padding="8dp">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:src="@drawable/profile_icon"
-                android:contentDescription="Profil" />
+                android:contentDescription="Page de profil (actuelle)" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Profil"
-                android:textColor="#1976D2"
-                android:textSize="12sp" />
+                android:textColor="@color/primary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp" />
         </LinearLayout>
     </LinearLayout>
 
