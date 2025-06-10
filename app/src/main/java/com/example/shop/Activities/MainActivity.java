@@ -110,31 +110,47 @@ public class MainActivity extends AppCompatActivity implements ProductMainAdapte
         });
 
         categoryClothes.setOnClickListener(v -> {
-            List<Categories> categories = dbHelper.getCategoriesByNom("Vêtements");
-            if (!categories.isEmpty()) {
-                Categories categorie = categories.get(0);
+            Integer categoryId = dbHelper.getIdCategoriesByNom("Vêtements");
+            if (categoryId != null) {
                 Intent intent = new Intent(MainActivity.this, ProductsByCategoryActivity.class);
-                intent.putExtra("category_id", categorie.getId());
-                intent.putExtra("category_name", categorie.getNom());
+                intent.putExtra("category_id", categoryId);
+                intent.putExtra("category_name", "Vêtements");
                 startActivity(intent);
             } else {
-                showCustomToast("Catégorie 'Vêtements' non trouvée");
+                showCustomToast("Catégorie 'Vêtements' non trouvée. Vérifiez la base de données.");
+                Log.w(TAG, "Category 'Vêtements' not found in the database.");
             }
         });
 
         tools.setOnClickListener(v -> {
-            List<Categories> categories = dbHelper.getCategoriesByNom("Tools");
-            if (!categories.isEmpty()) {
-                Categories categorie = categories.get(0);
+            Integer categoryId = dbHelper.getIdCategoriesByNom("Outils");
+            if (categoryId != null) {
                 Intent intent = new Intent(MainActivity.this, ProductsByCategoryActivity.class);
-                intent.putExtra("category_id", categorie.getId());
-                intent.putExtra("category_name", categorie.getNom());
+                intent.putExtra("category_id", categoryId);
+                intent.putExtra("category_name", "Outils");
                 startActivity(intent);
             } else {
-                showCustomToast("Catégorie 'Tools' non trouvée");
+                showCustomToast("Catégorie 'Outils' non trouvée. Vérifiez la base de données.");
+                Log.w(TAG, "Category 'Outils' not found in the database.");
             }
         });
 
+
+
+        tools.setOnClickListener(v -> {
+            Integer categoryId = dbHelper.getIdCategoriesByNom("Outils");
+            if (categoryId != null) {
+                Intent intent = new Intent(MainActivity.this, ProductsByCategoryActivity.class);
+                intent.putExtra("category_id", categoryId);
+                intent.putExtra("category_name", "Outils");
+                startActivity(intent);
+            } else {
+                showCustomToast("Catégorie 'Outils' non trouvée. Vérifiez la base de données.");
+                Log.w(TAG, "Category 'Outils' not found in the database.");
+            }
+        });
+
+//        afficher tous les produits ici
         viewAll.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, ProductsByCategoryActivity.class);
             intent.putExtra("category_id", -1);

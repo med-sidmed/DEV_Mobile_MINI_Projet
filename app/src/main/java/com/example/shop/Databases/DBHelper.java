@@ -24,28 +24,30 @@ public class DBHelper extends SQLiteOpenHelper {
     private static final String TAG = "DBHelper";
     private static final String DATABASE_NAME = "shop.db";
     private static final int DATABASE_VERSION = 4;
+
     public DBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String createProductsTable = "CREATE TABLE Products (\n" +
-                "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-                "    name TEXT NOT NULL,\n" +
-                "    description TEXT,\n" +
-                "    price REAL NOT NULL,\n" +
-                "    image1 TEXT,\n" +
-                "    image2 TEXT,\n" +
-                "    image3 TEXT,\n" +
-                "    image4 TEXT,\n" +
-                "    quantity INTEGER NOT NULL,\n" +
-                "    date_added TEXT NOT NULL,\n" +
-                "    date_modified TEXT,\n" +
-                "    is_active INTEGER NOT NULL,\n" +
-                "    category_id INTEGER NOT NULL,\n" +
-                "    user_id INTEGER NOT NULL\n" +
-                ")";
+        String createProductsTable = "CREATE TABLE Products (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "name TEXT NOT NULL, " +
+                "description TEXT, " +
+                "price REAL NOT NULL, " +
+                "image1 TEXT, " +
+                "image2 TEXT, " +
+                "image3 TEXT, " +
+                "image4 TEXT, " +
+                "quantity INTEGER NOT NULL, " +
+                "date_added TEXT NOT NULL, " +
+                "date_modified TEXT, " +
+                "is_active INTEGER NOT NULL, " +
+                "category_id INTEGER NOT NULL, " +
+                "user_id INTEGER NOT NULL, " +
+                "FOREIGN KEY(category_id) REFERENCES Categories(id), " +
+                "FOREIGN KEY(user_id) REFERENCES users(id))";
         db.execSQL(createProductsTable);
 
         String createCategoriesTable = "CREATE TABLE Categories (" +
@@ -54,16 +56,16 @@ public class DBHelper extends SQLiteOpenHelper {
                 "description TEXT)";
         db.execSQL(createCategoriesTable);
 
-        String CREATE_TABLE_PANIER = "CREATE TABLE panier (" +
+        String createPanierTable = "CREATE TABLE panier (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "utilisateur_id INTEGER, " +
                 "date_ajout TEXT, " +
                 "date_modification TEXT, " +
                 "is_active INTEGER, " +
                 "FOREIGN KEY(utilisateur_id) REFERENCES users(id))";
-        db.execSQL(CREATE_TABLE_PANIER);
+        db.execSQL(createPanierTable);
 
-        String CREATE_TABLE_ARTICLE_PANIER = "CREATE TABLE article_panier (" +
+        String createArticlePanierTable = "CREATE TABLE article_panier (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "produit_id INTEGER, " +
                 "panier_id INTEGER, " +
@@ -75,9 +77,9 @@ public class DBHelper extends SQLiteOpenHelper {
                 "is_active INTEGER, " +
                 "FOREIGN KEY(produit_id) REFERENCES Products(id), " +
                 "FOREIGN KEY(panier_id) REFERENCES panier(id))";
-        db.execSQL(CREATE_TABLE_ARTICLE_PANIER);
+        db.execSQL(createArticlePanierTable);
 
-        String CREATE_TABLE_USERS = "CREATE TABLE users (" +
+        String createUsersTable = "CREATE TABLE users (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "nom TEXT, " +
                 "prenom TEXT, " +
@@ -91,9 +93,9 @@ public class DBHelper extends SQLiteOpenHelper {
                 "pays TEXT, " +
                 "image TEXT, " +
                 "dateInscription TEXT)";
-        db.execSQL(CREATE_TABLE_USERS);
+        db.execSQL(createUsersTable);
 
-        String CREATE_TABLE_FAVORITES = "CREATE TABLE Favorites (" +
+        String createFavoritesTable = "CREATE TABLE Favorites (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "user_id INTEGER NOT NULL, " +
                 "product_id INTEGER NOT NULL, " +
@@ -101,14 +103,13 @@ public class DBHelper extends SQLiteOpenHelper {
                 "is_active INTEGER NOT NULL DEFAULT 1, " +
                 "FOREIGN KEY(user_id) REFERENCES users(id), " +
                 "FOREIGN KEY(product_id) REFERENCES Products(id))";
-        db.execSQL(CREATE_TABLE_FAVORITES);
+        db.execSQL(createFavoritesTable);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion < 4) {
-            // Ajouter la table Favorites si la version est inférieure à 4
-            String CREATE_TABLE_FAVORITES = "CREATE TABLE Favorites (" +
+            String createFavoritesTable = "CREATE TABLE Favorites (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "user_id INTEGER NOT NULL, " +
                     "product_id INTEGER NOT NULL, " +
@@ -116,17 +117,15 @@ public class DBHelper extends SQLiteOpenHelper {
                     "is_active INTEGER NOT NULL DEFAULT 1, " +
                     "FOREIGN KEY(user_id) REFERENCES users(id), " +
                     "FOREIGN KEY(product_id) REFERENCES Products(id))";
-            db.execSQL(CREATE_TABLE_FAVORITES);
+            db.execSQL(createFavoritesTable);
         }
-        // Si d'autres modifications sont nécessaires à l'avenir, elles peuvent être ajoutées ici
     }
 
-    public String getCurrentDate() {
+    private String getCurrentDate() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         return dateFormat.format(new Date());
     }
 
-    // Méthode pour récupérer les produits favoris d'
     public List<Produits> getFavoriteProducts(int userId) {
         List<Produits> favoriteProducts = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -136,7 +135,6 @@ public class DBHelper extends SQLiteOpenHelper {
                     "INNER JOIN Favorites f ON p.id = f.product_id " +
                     "WHERE f.user_id = ? AND f.is_active = 1 AND p.is_active = 1";
             cursor = db.rawQuery(query, new String[]{String.valueOf(userId)});
-            Log.d(TAG, "Nombre de produits favoris trouvés pour user_id " + userId + ": " + cursor.getCount());
             if (cursor.moveToFirst()) {
                 do {
                     Produits p = new Produits();
@@ -156,7 +154,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
-            Log.e(TAG, "Erreur lors de la récupération des produits favoris: " + e.getMessage());
+            Log.e(TAG, "Error fetching favorite products: " + e.getMessage());
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -166,18 +164,15 @@ public class DBHelper extends SQLiteOpenHelper {
         return favoriteProducts;
     }
 
-    // Méthode pour ajouter un produit aux favoris
     public boolean addFavorite(int userId, int productId) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
         try {
-            // Vérifier si le favori existe déjà
             Cursor cursor = db.rawQuery("SELECT id FROM Favorites WHERE user_id = ? AND product_id = ? AND is_active = 1",
                     new String[]{String.valueOf(userId), String.valueOf(productId)});
             if (cursor.moveToFirst()) {
                 cursor.close();
-                Log.d(TAG, "Produit " + productId + " déjà dans les favoris de l'utilisateur " + userId);
-                return false; // Favori déjà existant
+                return false;
             }
             cursor.close();
 
@@ -189,10 +184,9 @@ public class DBHelper extends SQLiteOpenHelper {
 
             long result = db.insertOrThrow("Favorites", null, values);
             db.setTransactionSuccessful();
-            Log.d(TAG, "Favori ajouté: user_id=" + userId + ", product_id=" + productId);
             return result != -1;
         } catch (Exception e) {
-            Log.e(TAG, "Erreur lors de l'ajout du favori: " + e.getMessage());
+            Log.e(TAG, "Error adding favorite: " + e.getMessage());
             return false;
         } finally {
             db.endTransaction();
@@ -200,7 +194,6 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-    // Méthode pour supprimer un produit des favoris
     public boolean removeFavorite(int userId, int productId) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
@@ -208,19 +201,15 @@ public class DBHelper extends SQLiteOpenHelper {
             int rowsAffected = db.delete("Favorites", "user_id = ? AND product_id = ?",
                     new String[]{String.valueOf(userId), String.valueOf(productId)});
             db.setTransactionSuccessful();
-            Log.d(TAG, "Favori supprimé: user_id=" + userId + ", product_id=" + productId + ", rowsAffected=" + rowsAffected);
             return rowsAffected > 0;
         } catch (Exception e) {
-            Log.e(TAG, "Erreur lors de la suppression du favori: " + e.getMessage());
+            Log.e(TAG, "Error removing favorite: " + e.getMessage());
             return false;
         } finally {
             db.endTransaction();
             db.close();
         }
     }
-
-    // Les autres méthodes existantes (non modifiées) sont omises pour brevité
-    // Inclure ici les méthodes comme insertProduct, updateProduct, deleteProduct, etc.
 
     public boolean insertProduct(String name, String description, double price, String image1, String image2,
                                  String image3, String image4, int quantity, int categoryId, int userId, boolean isActive) {
@@ -236,7 +225,6 @@ public class DBHelper extends SQLiteOpenHelper {
             Log.e(TAG, "Quantity cannot be negative");
             return false;
         }
-        // Vérifier si categoryId et userId existent
         if (!categoryExists(categoryId)) {
             Log.e(TAG, "Category ID does not exist");
             return false;
@@ -278,25 +266,39 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private boolean categoryExists(int categoryId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT id FROM Categories WHERE id = ?", new String[]{String.valueOf(categoryId)});
-        boolean exists = cursor.moveToFirst();
-        cursor.close();
-        db.close();
-        return exists;
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery("SELECT id FROM Categories WHERE id = ?", new String[]{String.valueOf(categoryId)});
+            return cursor.moveToFirst();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
     }
 
     private boolean userExists(int userId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT id FROM users WHERE id = ?", new String[]{String.valueOf(userId)});
-        boolean exists = cursor.moveToFirst();
-        cursor.close();
-        db.close();
-        return exists;
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery("SELECT id FROM users WHERE id = ?", new String[]{String.valueOf(userId)});
+            return cursor.moveToFirst();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
     }
+
     public boolean updateProduct(int id, String name, String description, double price,
                                  String image1, String image2, String image3, String image4,
                                  int quantity, long categoryId, long userId, boolean isActive) {
-        Log.d("DBHelper", "Updating product ID: " + id + ", Name: " + name);
+        if (name == null || name.trim().isEmpty()) {
+            Log.e(TAG, "Product name cannot be empty");
+            return false;
+        }
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
         try {
@@ -316,10 +318,9 @@ public class DBHelper extends SQLiteOpenHelper {
 
             int rowsAffected = db.update("Products", values, "id = ?", new String[]{String.valueOf(id)});
             db.setTransactionSuccessful();
-            Log.d("DBHelper", "Update rows affected: " + rowsAffected);
             return rowsAffected > 0;
         } catch (Exception e) {
-            Log.e("DBHelper", "Error updating product: " + e.getMessage(), e);
+            Log.e(TAG, "Error updating product: " + e.getMessage());
             return false;
         } finally {
             db.endTransaction();
@@ -379,6 +380,10 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public boolean insertCategory(String name, String description) {
+        if (name == null || name.trim().isEmpty()) {
+            Log.e(TAG, "Category name cannot be empty");
+            return false;
+        }
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
         try {
@@ -403,11 +408,12 @@ public class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
         try {
-            cursor = db.rawQuery("SELECT name, description FROM Categories WHERE name LIKE ?",
+            cursor = db.rawQuery("SELECT id, name, description FROM Categories WHERE name LIKE ?",
                     new String[]{"%" + nom + "%"});
             if (cursor.moveToFirst()) {
                 do {
                     Categories categorie = new Categories();
+                    categorie.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
                     categorie.setNom(cursor.getString(cursor.getColumnIndexOrThrow("name")));
                     categorie.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
                     categories.add(categorie);
@@ -435,7 +441,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 categoryId = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error fetching category ID by name: " + e.getMessage(), e); // Correction ici
+            Log.e(TAG, "Error fetching category ID by name: " + e.getMessage());
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -443,9 +449,6 @@ public class DBHelper extends SQLiteOpenHelper {
             db.close();
         }
         return categoryId;
-    }
-
-    private void InputStreamReader(String tag, String s) {
     }
 
     public Categories GetCategorieByType(String type) {
@@ -461,10 +464,11 @@ public class DBHelper extends SQLiteOpenHelper {
             cursor = db.rawQuery("SELECT * FROM Categories", null);
             if (cursor.moveToFirst()) {
                 do {
-                    int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
-                    String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
-                    String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
-                    categories.add(new Categories(id, name, description));
+                    Categories category = new Categories();
+                    category.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                    category.setNom(cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                    category.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
+                    categories.add(category);
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
@@ -479,6 +483,10 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public boolean updateCategory(int id, String name, String description) {
+        if (name == null || name.trim().isEmpty()) {
+            Log.e(TAG, "Category name cannot be empty");
+            return false;
+        }
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
         try {
@@ -536,22 +544,26 @@ public class DBHelper extends SQLiteOpenHelper {
             db.setTransactionSuccessful();
             return id;
         } catch (Exception e) {
-            Log.e(TAG, "Erreur lors de l'ajout du panier: " + e.getMessage());
+            Log.e(TAG, "Error adding panier: " + e.getMessage());
             return -1;
         } finally {
             db.endTransaction();
             db.close();
         }
     }
+
     public boolean supprimerPanier(int panierId) {
         SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();
         try {
             int rowsAffected = db.delete("panier", "id = ?", new String[]{String.valueOf(panierId)});
+            db.setTransactionSuccessful();
             return rowsAffected > 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error deleting panier: " + e.getMessage());
             return false;
         } finally {
+            db.endTransaction();
             db.close();
         }
     }
@@ -559,8 +571,9 @@ public class DBHelper extends SQLiteOpenHelper {
     public List<Panier> getAllPaniers() {
         List<Panier> paniers = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM panier WHERE is_active = 1", null);
+        Cursor cursor = null;
         try {
+            cursor = db.rawQuery("SELECT * FROM panier WHERE is_active = 1", null);
             if (cursor.moveToFirst()) {
                 do {
                     Panier panier = new Panier();
@@ -573,14 +586,15 @@ public class DBHelper extends SQLiteOpenHelper {
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error fetching paniers: " + e.getMessage());
         } finally {
-            cursor.close();
+            if (cursor != null) {
+                cursor.close();
+            }
             db.close();
         }
         return paniers;
     }
-
 
     public boolean ajouterArticlePanier(ArticlePanier article) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -598,10 +612,9 @@ public class DBHelper extends SQLiteOpenHelper {
 
             long result = db.insertOrThrow("article_panier", null, values);
             db.setTransactionSuccessful();
-            Log.d(TAG, "Article added to panier: produit_id=" + article.getProduit().getId() + ", panier_id=" + article.getPanier().getId());
             return result != -1;
         } catch (Exception e) {
-            Log.e(TAG, "Erreur lors de l'ajout de l'article au panier: " + e.getMessage(), e);
+            Log.e(TAG, "Error adding article to panier: " + e.getMessage());
             return false;
         } finally {
             db.endTransaction();
@@ -609,49 +622,65 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-
     public void ajouterUtilisateur(Users user) {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("nom", user.getNom());
-        values.put("prenom", user.getPrenom());
-        values.put("email", user.getEmail());
-        values.put("password", user.getPassword());
-        values.put("role", user.getRole());
-        values.put("adresse", user.getAdresse());
-        values.put("telephone", user.getTelephone());
-        values.put("ville", user.getVille());
-        values.put("codePostal", user.getCodePostal());
-        values.put("pays", user.getPays());
-        values.put("image", user.getImage());
-        values.put("dateInscription", user.getDateInscription());
+        db.beginTransaction();
+        try {
+            ContentValues values = new ContentValues();
+            values.put("nom", user.getNom());
+            values.put("prenom", user.getPrenom());
+            values.put("email", user.getEmail());
+            values.put("password", user.getPassword());
+            values.put("role", user.getRole());
+            values.put("adresse", user.getAdresse());
+            values.put("telephone", user.getTelephone());
+            values.put("ville", user.getVille());
+            values.put("codePostal", user.getCodePostal());
+            values.put("pays", user.getPays());
+            values.put("image", user.getImage());
+            values.put("dateInscription", user.getDateInscription());
 
-        db.insert("users", null, values);
-        db.close();
+            db.insertOrThrow("users", null, values);
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            Log.e(TAG, "Error adding user: " + e.getMessage());
+        } finally {
+            db.endTransaction();
+            db.close();
+        }
     }
 
     public Users getUserByEmail(String email) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query("users", null, "email=?", new String[]{email}, null, null, null);
-        if (cursor != null && cursor.moveToFirst()) {
-            Users user = new Users();
-            user.setId(cursor.getInt(cursor.getColumnIndex("id")));
-            user.setNom(cursor.getString(cursor.getColumnIndex("nom")));
-            user.setPrenom(cursor.getString(cursor.getColumnIndex("prenom")));
-            user.setEmail(cursor.getString(cursor.getColumnIndex("email")));
-            user.setPassword(cursor.getString(cursor.getColumnIndex("password")));
-            user.setRole(cursor.getString(cursor.getColumnIndex("role")));
-            user.setAdresse(cursor.getString(cursor.getColumnIndex("adresse")));
-            user.setTelephone(cursor.getString(cursor.getColumnIndex("telephone")));
-            user.setVille(cursor.getString(cursor.getColumnIndex("ville")));
-            user.setCodePostal(cursor.getString(cursor.getColumnIndex("codePostal")));
-            user.setPays(cursor.getString(cursor.getColumnIndex("pays")));
-            user.setImage(cursor.getString(cursor.getColumnIndex("image")));
-            user.setDateInscription(cursor.getString(cursor.getColumnIndex("dateInscription")));
-            cursor.close();
-            return user;
+        Cursor cursor = null;
+        Users user = null;
+        try {
+            cursor = db.query("users", null, "email=?", new String[]{email}, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                user = new Users();
+                user.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                user.setNom(cursor.getString(cursor.getColumnIndexOrThrow("nom")));
+                user.setPrenom(cursor.getString(cursor.getColumnIndexOrThrow("prenom")));
+                user.setEmail(cursor.getString(cursor.getColumnIndexOrThrow("email")));
+                user.setPassword(cursor.getString(cursor.getColumnIndexOrThrow("password")));
+                user.setRole(cursor.getString(cursor.getColumnIndexOrThrow("role")));
+                user.setAdresse(cursor.getString(cursor.getColumnIndexOrThrow("adresse")));
+                user.setTelephone(cursor.getString(cursor.getColumnIndexOrThrow("telephone")));
+                user.setVille(cursor.getString(cursor.getColumnIndexOrThrow("ville")));
+                user.setCodePostal(cursor.getString(cursor.getColumnIndexOrThrow("codePostal")));
+                user.setPays(cursor.getString(cursor.getColumnIndexOrThrow("pays")));
+                user.setImage(cursor.getString(cursor.getColumnIndexOrThrow("image")));
+                user.setDateInscription(cursor.getString(cursor.getColumnIndexOrThrow("dateInscription")));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching user by email: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
         }
-        return null;
+        return user;
     }
 
     public List<Produits> getProductsByCategory(int categoryId) {
@@ -659,8 +688,12 @@ public class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
         try {
-            cursor = db.rawQuery("SELECT * FROM Products WHERE is_active = 1 AND category_id = ?",
-                    new String[]{String.valueOf(categoryId)});
+            String query = categoryId == -1 ?
+                    "SELECT * FROM Products WHERE is_active = 1" :
+                    "SELECT * FROM Products WHERE is_active = 1 AND category_id = ?";
+            cursor = categoryId == -1 ?
+                    db.rawQuery(query, null) :
+                    db.rawQuery(query, new String[]{String.valueOf(categoryId)});
             if (cursor.moveToFirst()) {
                 do {
                     Produits p = new Produits();
@@ -689,7 +722,6 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         return products;
     }
-
     public List<Produits> searchProducts(String query) {
         List<Produits> products = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -730,29 +762,26 @@ public class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
         Categories category = null;
-
         try {
-            cursor = db.rawQuery("SELECT id, nom, description FROM Categories WHERE id = ?",
+            cursor = db.rawQuery("SELECT id, name, description FROM Categories WHERE id = ?",
                     new String[]{String.valueOf(id)});
-
-            if (cursor != null && cursor.moveToFirst()) {
+            if (cursor.moveToFirst()) {
                 category = new Categories(
                         cursor.getInt(cursor.getColumnIndexOrThrow("id")),
-                        cursor.getString(cursor.getColumnIndexOrThrow("nom")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("name")),
                         cursor.getString(cursor.getColumnIndexOrThrow("description"))
                 );
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error fetching category by id " + id + ": " + e.getMessage(), e);
+            Log.e(TAG, "Error fetching category by id: " + e.getMessage());
         } finally {
             if (cursor != null) {
                 cursor.close();
             }
-         }
-
+            db.close();
+        }
         return category;
     }
-
 
     public Produits getProductById(int productId) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -777,7 +806,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 produit.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
             }
         } catch (Exception e) {
-            Log.e(TAG, "Erreur lors de la récupération du produit: " + e.getMessage());
+            Log.e(TAG, "Error fetching product: " + e.getMessage());
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -793,11 +822,9 @@ public class DBHelper extends SQLiteOpenHelper {
         try {
             cursor = db.rawQuery("SELECT id FROM Favorites WHERE user_id = ? AND product_id = ? AND is_active = 1",
                     new String[]{String.valueOf(userId), String.valueOf(productId)});
-            boolean isFavorite = cursor.moveToFirst();
-            Log.d(TAG, "Produit " + productId + " est favori pour user_id " + userId + ": " + isFavorite);
-            return isFavorite;
+            return cursor.moveToFirst();
         } catch (Exception e) {
-            Log.e(TAG, "Erreur lors de la vérification du favori: " + e.getMessage());
+            Log.e(TAG, "Error checking favorite: " + e.getMessage());
             return false;
         } finally {
             if (cursor != null) {
@@ -807,14 +834,13 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-
-
     public Users getUserById(int userId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query("users", null, "id=?", new String[]{String.valueOf(userId)}, null, null, null);
+        Cursor cursor = null;
         Users user = null;
         try {
-            if (cursor != null && cursor.moveToFirst()) {
+            cursor = db.query("users", null, "id=?", new String[]{String.valueOf(userId)}, null, null, null);
+            if (cursor.moveToFirst()) {
                 user = new Users();
                 user.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
                 user.setNom(cursor.getString(cursor.getColumnIndexOrThrow("nom")));
@@ -844,18 +870,16 @@ public class DBHelper extends SQLiteOpenHelper {
     public List<ArticlePanier> getArticlesByPanierId(int panierId) {
         List<ArticlePanier> articles = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-
-        // Correction : Remplacer "produits" par "Products" dans la requête
-        String query = "SELECT p.*, pa.id AS article_panier_id, pa.quantite, pa.prix_unitaire " +
-                "FROM article_panier pa " +
-                "INNER JOIN Products p ON pa.produit_id = p.id " +
-                "WHERE pa.panier_id = ?";
         Cursor cursor = null;
         try {
+            String query = "SELECT p.*, pa.id AS article_panier_id, pa.quantite, pa.prix_unitaire, pa.prix_total, " +
+                    "pa.date_ajout, pa.date_modification, pa.is_active " +
+                    "FROM article_panier pa " +
+                    "INNER JOIN Products p ON pa.produit_id = p.id " +
+                    "WHERE pa.panier_id = ? AND pa.is_active = 1";
             cursor = db.rawQuery(query, new String[]{String.valueOf(panierId)});
             if (cursor.moveToFirst()) {
                 do {
-                    // Initialisation correcte des objets
                     Produits produit = new Produits();
                     produit.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
                     produit.setNom(cursor.getString(cursor.getColumnIndexOrThrow("name")));
@@ -873,43 +897,42 @@ public class DBHelper extends SQLiteOpenHelper {
                     ArticlePanier article = new ArticlePanier();
                     article.setId(cursor.getInt(cursor.getColumnIndexOrThrow("article_panier_id")));
                     article.setProduit(produit);
-                    article.setPanier(new Panier(panierId)); // Assigner le panier_id
+                    article.setPanier(new Panier(panierId));
                     article.setQuantite(cursor.getInt(cursor.getColumnIndexOrThrow("quantite")));
                     article.setPrixUnitaire(cursor.getDouble(cursor.getColumnIndexOrThrow("prix_unitaire")));
+                    article.setPrixTotal(cursor.getDouble(cursor.getColumnIndexOrThrow("prix_total")));
+                    article.setDateAjout(cursor.getString(cursor.getColumnIndexOrThrow("date_ajout")));
+                    article.setDateModification(cursor.getString(cursor.getColumnIndexOrThrow("date_modification")));
+                    article.setActive(cursor.getInt(cursor.getColumnIndexOrThrow("is_active")) == 1);
 
                     articles.add(article);
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
-            Log.e(TAG, "Erreur lors de la récupération des articles du panier: " + e.getMessage(), e);
+            Log.e(TAG, "Error fetching articles by panier: " + e.getMessage());
         } finally {
             if (cursor != null) {
                 cursor.close();
             }
             db.close();
         }
-        Log.d("DBHelper", "Retrieved " + articles.size() + " articles for panier ID: " + panierId);
         return articles;
     }
 
-    // Méthode corrigée : cleanOrphanedCartItems
     public void cleanOrphanedCartItems() {
         SQLiteDatabase db = this.getWritableDatabase();
-        // Correction : Remplacer "produits" par "Products"
-        String query = "DELETE FROM article_panier WHERE produit_id NOT IN (SELECT id FROM Products)";
+        db.beginTransaction();
         try {
+            String query = "DELETE FROM article_panier WHERE produit_id NOT IN (SELECT id FROM Products)";
             db.execSQL(query);
-            Log.d("DBHelper", "Cleaned orphaned cart items");
+            db.setTransactionSuccessful();
         } catch (Exception e) {
-            Log.e(TAG, "Erreur lors du nettoyage des articles orphelins: " + e.getMessage(), e);
+            Log.e(TAG, "Error cleaning orphaned cart items: " + e.getMessage());
         } finally {
+            db.endTransaction();
             db.close();
         }
     }
-
-    // Correction : Remplacer InputStreamReader par Log.e
-
-
 
     public boolean supprimerArticlePanier(int articleId) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -919,12 +942,11 @@ public class DBHelper extends SQLiteOpenHelper {
             db.setTransactionSuccessful();
             return rowsAffected > 0;
         } catch (Exception e) {
-            Log.e(TAG, "Erreur lors de la suppression de l'article du panier: " + e.getMessage());
+            Log.e(TAG, "Error deleting article from panier: " + e.getMessage());
             return false;
         } finally {
             db.endTransaction();
             db.close();
         }
     }
-
 }
