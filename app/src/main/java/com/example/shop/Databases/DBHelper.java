@@ -867,6 +867,74 @@ public class DBHelper extends SQLiteOpenHelper {
         return user;
     }
 
+    public List<Users> getAllUsers() {
+        List<Users> users = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery("SELECT * FROM users", null);
+            if (cursor.moveToFirst()) {
+                do {
+                    Users user = new Users();
+                    user.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                    user.setNom(cursor.getString(cursor.getColumnIndexOrThrow("nom")));
+                    user.setPrenom(cursor.getString(cursor.getColumnIndexOrThrow("prenom")));
+                    user.setEmail(cursor.getString(cursor.getColumnIndexOrThrow("email")));
+                    user.setPassword(cursor.getString(cursor.getColumnIndexOrThrow("password")));
+                    user.setRole(cursor.getString(cursor.getColumnIndexOrThrow("role")));
+                    user.setAdresse(cursor.getString(cursor.getColumnIndexOrThrow("adresse")));
+                    user.setTelephone(cursor.getString(cursor.getColumnIndexOrThrow("telephone")));
+                    user.setVille(cursor.getString(cursor.getColumnIndexOrThrow("ville")));
+                    user.setCodePostal(cursor.getString(cursor.getColumnIndexOrThrow("codePostal")));
+                    user.setPays(cursor.getString(cursor.getColumnIndexOrThrow("pays")));
+                    user.setImage(cursor.getString(cursor.getColumnIndexOrThrow("image")));
+                    user.setDateInscription(cursor.getString(cursor.getColumnIndexOrThrow("dateInscription")));
+                    users.add(user);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching users: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+        return users;
+    }
+
+    public List<ArticlePanier> getAllArticlePaniers() {
+        List<ArticlePanier> articles = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery("SELECT * FROM article_panier WHERE is_active = 1", null);
+            if (cursor.moveToFirst()) {
+                do {
+                    ArticlePanier article = new ArticlePanier();
+                    article.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                    article.setProduit(new Produits(cursor.getInt(cursor.getColumnIndexOrThrow("produit_id"))));
+                    article.setPanier(new Panier(cursor.getInt(cursor.getColumnIndexOrThrow("panier_id"))));
+                    article.setQuantite(cursor.getInt(cursor.getColumnIndexOrThrow("quantite")));
+                    article.setPrixUnitaire(cursor.getDouble(cursor.getColumnIndexOrThrow("prix_unitaire")));
+                    article.setPrixTotal(cursor.getDouble(cursor.getColumnIndexOrThrow("prix_total")));
+                    article.setDateAjout(cursor.getString(cursor.getColumnIndexOrThrow("date_ajout")));
+                    article.setDateModification(cursor.getString(cursor.getColumnIndexOrThrow("date_modification")));
+                    article.setActive(cursor.getInt(cursor.getColumnIndexOrThrow("is_active")) == 1);
+                    articles.add(article);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching article paniers: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+        return articles;
+    }
+
     public List<ArticlePanier> getArticlesByPanierId(int panierId) {
         List<ArticlePanier> articles = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();

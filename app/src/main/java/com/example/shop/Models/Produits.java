@@ -38,8 +38,9 @@ public class Produits {
         this.utilisateur = utilisateur;
     }
 
-
-
+    public Produits(int produitId) {
+        this.id=produitId;
+    }
 
 
     public int getId() {
