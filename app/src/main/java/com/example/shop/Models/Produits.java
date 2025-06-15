@@ -1,23 +1,29 @@
 package com.example.shop.Models;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.Date;
 
 public class Produits {
-    private int id;
-    private String nom;
-    private String description;
-    private Double prix;
-    private String image1;
-    private String image2;
-    private String image3;
-    private String image4;
-    private int quantite;
+
+     private int id;
+     private String nom;
+     private String description;
+     private Double prix;
+     private String image1;
+
+     private String image2;
+
+     private String image3;
+
+     private String image4;
+
+     private int quantite;
     private Date dateAjout;
     private Date dateModification;
-    private boolean isActive;
-    private Categories categorie;
-
-    private Users utilisateur;
+     private boolean isActive;
+     private Categories categorie;
+     private Users utilisateur;
 
 
     public Produits(){}
@@ -34,6 +40,8 @@ public class Produits {
         this.dateAjout = dateAjout;
         this.dateModification = dateModification;
         this.isActive = isActive;
+
+
         this.categorie = categorie;
         this.utilisateur = utilisateur;
     }
@@ -183,4 +191,8 @@ public class Produits {
         return this.quantite;
     }
 
+    public Object getDateAdded() {
+
+        return this.dateAjout;
+    }
 }

@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements ProductMainAdapte
             return insets;
         });
 
+
         // Initialiser SharedPreferences
         sharedPreferences = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
 

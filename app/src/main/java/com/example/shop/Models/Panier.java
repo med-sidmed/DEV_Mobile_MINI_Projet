@@ -1,18 +1,18 @@
 package com.example.shop.Models;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.Date;
 import java.util.List;
 
 public class Panier {
-    private int id;
-
-    private Users utilisateur;
+     private int id;
+     private Users utilisateur;
 
     private String dateAjout;
     private String dateModification;
     private boolean isActive;
-
-    private List<ArticlePanier> articles;
+     private List<ArticlePanier> articles;
 
 
     public Panier(){}

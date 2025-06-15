@@ -1,12 +1,15 @@
 package com.example.shop.Models;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.Date;
 import java.util.List;
 
 public class Categories {
-    private int id;
-    private String nom;
-    private String description;
+
+     private int id;
+     private String nom;
+     private String description;
 
 
     public Categories(){}

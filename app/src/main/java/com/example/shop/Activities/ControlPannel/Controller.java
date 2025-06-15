@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.shop.API.SyncActivity;
 import com.example.shop.Activities.MainActivity;
 import com.example.shop.Adapter.CategorieAdapter;
 import com.example.shop.Adapter.ProduitAdapter;
@@ -40,18 +41,25 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
     private RecyclerView recyclerCategories;
     private ProduitAdapter produitAdapter;
     private CategorieAdapter categorieAdapter;
-    Button retourner;
+    Button retourner,syncronisationpage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_controller);
         retourner = findViewById(R.id.retourner);
+        syncronisationpage = findViewById(R.id.syncronisation);
 
         retourner.setOnClickListener(v -> {
             Intent intent = new Intent(Controller.this, MainActivity.class);
             startActivity(intent);
         });
+
+        syncronisationpage.setOnClickListener(v -> {
+            Intent intent = new Intent(Controller.this, SyncActivity.class);
+            startActivity(intent);
+        });
+
 
         // Initialize DBHelper
         dbHelper = new DBHelper(this);

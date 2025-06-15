@@ -26,6 +26,14 @@
             tools:ignore="HardcodedText" />
 
 
+        <Button
+            android:id="@+id/syncronisation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="pagesuncronisation"
+            tools:ignore="HardcodedText" />
+
+
         <!-- Add Product Button -->
         <Button
             android:id="@+id/btnAjouterProduit"

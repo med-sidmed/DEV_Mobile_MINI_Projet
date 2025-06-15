@@ -1,26 +1,17 @@
 package com.example.shop.Models;
 
+import com.google.gson.annotations.SerializedName;
+
 public class ArticlePanier {
-
-    private int id;
-
-    private Produits produit;
-
-
+     private int id;
+     private Produits produit;
     private Panier panier;
-
-    private int quantite;
-
-
-
-
+     private int quantite;
     private String dateModification;
-
     private boolean isActive;
-
     private double prixUnitaire;
-
-    private double prixTotal;   private String dateAjout;
+    private double prixTotal;
+    private String dateAjout;
 
 
 
