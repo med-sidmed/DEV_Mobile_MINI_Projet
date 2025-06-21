@@ -2,6 +2,7 @@ package com.example.shop.API;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -32,7 +33,14 @@ public class SyncActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
 
         // Initialize sync manager
-        syncManager = new ApiSyncManager(this);
+        try {
+            syncManager = new ApiSyncManager(this);
+        } catch (ApiSyncManager.SyncException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Clear focus to prevent IME issues
+        getWindow().getDecorView().clearFocus();
 
         // Configure sync button
         btnSync.setOnClickListener(v -> startSynchronization());
@@ -46,32 +54,40 @@ public class SyncActivity extends AppCompatActivity {
     }
 
     private void startSynchronization() {
-        // Show progress bar and disable sync button
+        if (isFinishing() || isDestroyed()) {
+            Log.w("SyncActivity", "Activité terminée, abandon de la synchronisation");
+            return;
+        }
+
         progressBar.setVisibility(View.VISIBLE);
         btnSync.setEnabled(false);
         tvSyncStatus.setText("Statut : Synchronisation en cours...");
 
-        // Start synchronization
         syncManager.synchronizeData(new ApiSyncManager.SyncCallback() {
             @Override
             public void onSuccess(String message) {
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(View.GONE);
-                    btnSync.setEnabled(true);
-                    tvSyncStatus.setText("Statut : " + message);
-                    Toast.makeText(SyncActivity.this, message, Toast.LENGTH_SHORT).show();
-                });
+                if (!isFinishing() && !isDestroyed()) {
+                    runOnUiThread(() -> {
+                        progressBar.setVisibility(View.GONE);
+                        btnSync.setEnabled(true);
+                        tvSyncStatus.setText("Statut : " + message);
+                        Toast.makeText(SyncActivity.this, message, Toast.LENGTH_SHORT).show();
+                    });
+                }
             }
 
             @Override
             public void onFailure(String error) {
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(View.GONE);
-                    btnSync.setEnabled(true);
-                    tvSyncStatus.setText("Statut : Échec - " + error);
-                    Toast.makeText(SyncActivity.this, "Échec de la synchronisation : " + error, Toast.LENGTH_LONG).show();
-                });
+                if (!isFinishing() && !isDestroyed()) {
+                    runOnUiThread(() -> {
+                        progressBar.setVisibility(View.GONE);
+                        btnSync.setEnabled(true);
+                        tvSyncStatus.setText("Statut : Échec - " + error);
+                        Toast.makeText(SyncActivity.this, "Échec de la synchronisation : " + error, Toast.LENGTH_LONG).show();
+                    });
+                }
             }
         });
     }
+
 }

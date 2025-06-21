@@ -1,7 +1,11 @@
 package com.example.shop.dto;
 
 
+import com.example.shop.Models.Categories;
+import com.example.shop.Models.Users;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.Date;
 
 public class ProductDTO {
     @SerializedName("name")
@@ -37,7 +41,18 @@ public class ProductDTO {
     @SerializedName("isActive")
     private Boolean isActive;
 
+
+    private Date dateAjout;
+    private Date dateModification;
+
+    private Categories categorie;
+    private Users utilisateur;
+
+
+
     // Getters and setters
+
+
     public String getName() {
         return name;
     }
@@ -118,11 +133,43 @@ public class ProductDTO {
         this.userId = userId;
     }
 
-    public Boolean getIsActive() {
+    public Boolean getActive() {
         return isActive;
     }
 
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
+    public void setActive(Boolean active) {
+        isActive = active;
+    }
+
+    public Date getDateAjout() {
+        return dateAjout;
+    }
+
+    public void setDateAjout(Date dateAjout) {
+        this.dateAjout = dateAjout;
+    }
+
+    public Date getDateModification() {
+        return dateModification;
+    }
+
+    public void setDateModification(Date dateModification) {
+        this.dateModification = dateModification;
+    }
+
+    public Categories getCategorie() {
+        return categorie;
+    }
+
+    public void setCategorie(Categories categorie) {
+        this.categorie = categorie;
+    }
+
+    public Users getUtilisateur() {
+        return utilisateur;
+    }
+
+    public void setUtilisateur(Users utilisateur) {
+        this.utilisateur = utilisateur;
     }
 }

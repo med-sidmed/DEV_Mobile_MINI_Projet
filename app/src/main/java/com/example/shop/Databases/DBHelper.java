@@ -20,15 +20,27 @@
     import java.util.Locale;
     
     public class DBHelper extends SQLiteOpenHelper {
-    
+        private static volatile DBHelper instance = null;
         private static final String TAG = "DBHelper";
         private static final String DATABASE_NAME = "shop.db";
         private static final int DATABASE_VERSION = 4;
-    
+
         public DBHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
         }
-    
+
+
+        public static DBHelper getInstance(Context context) {
+            if (instance == null) {
+                synchronized (DBHelper.class) {
+                    if (instance == null) {
+                        instance = new DBHelper(context);
+                    }
+                }
+            }
+            return instance;
+        }
+
         @Override
         public void onCreate(SQLiteDatabase db) {
             String createProductsTable = "CREATE TABLE Products (" +
@@ -49,13 +61,13 @@
                     "FOREIGN KEY(category_id) REFERENCES Categories(id), " +
                     "FOREIGN KEY(user_id) REFERENCES users(id))";
             db.execSQL(createProductsTable);
-    
+
             String createCategoriesTable = "CREATE TABLE Categories (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "name TEXT NOT NULL, " +
                     "description TEXT)";
             db.execSQL(createCategoriesTable);
-    
+
             String createPanierTable = "CREATE TABLE panier (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "utilisateur_id INTEGER, " +
@@ -64,7 +76,7 @@
                     "is_active INTEGER, " +
                     "FOREIGN KEY(utilisateur_id) REFERENCES users(id))";
             db.execSQL(createPanierTable);
-    
+
             String createArticlePanierTable = "CREATE TABLE article_panier (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "produit_id INTEGER, " +
@@ -78,7 +90,7 @@
                     "FOREIGN KEY(produit_id) REFERENCES Products(id), " +
                     "FOREIGN KEY(panier_id) REFERENCES panier(id))";
             db.execSQL(createArticlePanierTable);
-    
+
             String createUsersTable = "CREATE TABLE users (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "nom TEXT, " +
@@ -94,7 +106,7 @@
                     "image TEXT, " +
                     "dateInscription TEXT)";
             db.execSQL(createUsersTable);
-    
+
             String createFavoritesTable = "CREATE TABLE Favorites (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "user_id INTEGER NOT NULL, " +
@@ -105,7 +117,7 @@
                     "FOREIGN KEY(product_id) REFERENCES Products(id))";
             db.execSQL(createFavoritesTable);
         }
-    
+
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             if (oldVersion < 4) {
@@ -120,12 +132,12 @@
                 db.execSQL(createFavoritesTable);
             }
         }
-    
+
         private String getCurrentDate() {
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
             return dateFormat.format(new Date());
         }
-    
+
         public List<Produits> getFavoriteProducts(int userId) {
             List<Produits> favoriteProducts = new ArrayList<>();
             SQLiteDatabase db = this.getReadableDatabase();
@@ -163,7 +175,7 @@
             }
             return favoriteProducts;
         }
-    
+
         public boolean addFavorite(int userId, int productId) {
             SQLiteDatabase db = this.getWritableDatabase();
             db.beginTransaction();
@@ -175,13 +187,13 @@
                     return false;
                 }
                 cursor.close();
-    
+
                 ContentValues values = new ContentValues();
                 values.put("user_id", userId);
                 values.put("product_id", productId);
                 values.put("date_added", getCurrentDate());
                 values.put("is_active", 1);
-    
+
                 long result = db.insertOrThrow("Favorites", null, values);
                 db.setTransactionSuccessful();
                 return result != -1;
@@ -193,7 +205,7 @@
                 db.close();
             }
         }
-    
+
         public boolean removeFavorite(int userId, int productId) {
             SQLiteDatabase db = this.getWritableDatabase();
             db.beginTransaction();
@@ -210,7 +222,7 @@
                 db.close();
             }
         }
-    
+
         public boolean insertProduct(String name, String description, double price, String image1, String image2,
                                      String image3, String image4, int quantity, int categoryId, int userId, boolean isActive) {
             if (name == null || name.trim().isEmpty()) {
@@ -233,7 +245,7 @@
                 Log.e(TAG, "User ID does not exist");
                 return false;
             }
-    
+
             SQLiteDatabase db = this.getWritableDatabase();
             db.beginTransaction();
             try {
@@ -251,7 +263,7 @@
                 values.put("is_active", isActive ? 1 : 0);
                 values.put("date_added", getCurrentDate());
                 values.put("date_modified", getCurrentDate());
-    
+
                 long result = db.insertOrThrow("Products", null, values);
                 db.setTransactionSuccessful();
                 return result != -1;
@@ -263,21 +275,8 @@
                 db.close();
             }
         }
-    
-        private boolean categoryExists(int categoryId) {
-            SQLiteDatabase db = this.getReadableDatabase();
-            Cursor cursor = null;
-            try {
-                cursor = db.rawQuery("SELECT id FROM Categories WHERE id = ?", new String[]{String.valueOf(categoryId)});
-                return cursor.moveToFirst();
-            } finally {
-                if (cursor != null) {
-                    cursor.close();
-                }
-                db.close();
-            }
-        }
-    
+
+
         private boolean userExists(int userId) {
             SQLiteDatabase db = this.getReadableDatabase();
             Cursor cursor = null;
@@ -291,7 +290,7 @@
                 db.close();
             }
         }
-    
+
         public boolean updateProduct(int id, String name, String description, double price,
                                      String image1, String image2, String image3, String image4,
                                      int quantity, long categoryId, long userId, boolean isActive) {
@@ -315,7 +314,7 @@
                 values.put("is_active", isActive ? 1 : 0);
                 values.put("category_id", categoryId);
                 values.put("user_id", userId);
-    
+
                 int rowsAffected = db.update("Products", values, "id = ?", new String[]{String.valueOf(id)});
                 db.setTransactionSuccessful();
                 return rowsAffected > 0;
@@ -327,7 +326,7 @@
                 db.close();
             }
         }
-    
+
         public boolean deleteProduct(int id) {
             SQLiteDatabase db = this.getWritableDatabase();
             db.beginTransaction();
@@ -343,7 +342,7 @@
                 db.close();
             }
         }
-    
+
         public List<Produits> getAllProducts() {
             List<Produits> products = new ArrayList<>();
             SQLiteDatabase db = this.getReadableDatabase();
@@ -378,7 +377,7 @@
             }
             return products;
         }
-    
+
         public boolean insertCategory(String name, String description) {
             if (name == null || name.trim().isEmpty()) {
                 Log.e(TAG, "Category name cannot be empty");
@@ -390,7 +389,7 @@
                 ContentValues values = new ContentValues();
                 values.put("name", name);
                 values.put("description", description);
-    
+
                 long result = db.insertOrThrow("Categories", null, values);
                 db.setTransactionSuccessful();
                 return result != -1;
@@ -402,7 +401,7 @@
                 db.close();
             }
         }
-    
+
         public List<Categories> getCategoriesByNom(String nom) {
             List<Categories> categories = new ArrayList<>();
             SQLiteDatabase db = this.getReadableDatabase();
@@ -429,7 +428,7 @@
             }
             return categories;
         }
-    
+
         public Integer getIdCategoriesByNom(String nom) {
             SQLiteDatabase db = this.getReadableDatabase();
             Cursor cursor = null;
@@ -450,12 +449,12 @@
             }
             return categoryId;
         }
-    
+
         public Categories GetCategorieByType(String type) {
             List<Categories> categories = getCategoriesByNom(type);
             return categories.isEmpty() ? null : categories.get(0);
         }
-    
+
         public List<Categories> getAllCategories() {
             List<Categories> categories = new ArrayList<>();
             SQLiteDatabase db = this.getReadableDatabase();
@@ -481,31 +480,8 @@
             }
             return categories;
         }
-    
-        public boolean updateCategory(int id, String name, String description) {
-            if (name == null || name.trim().isEmpty()) {
-                Log.e(TAG, "Category name cannot be empty");
-                return false;
-            }
-            SQLiteDatabase db = this.getWritableDatabase();
-            db.beginTransaction();
-            try {
-                ContentValues values = new ContentValues();
-                values.put("name", name);
-                values.put("description", description);
-    
-                int rowsAffected = db.update("Categories", values, "id = ?", new String[]{String.valueOf(id)});
-                db.setTransactionSuccessful();
-                return rowsAffected > 0;
-            } catch (Exception e) {
-                Log.e(TAG, "Error updating category: " + e.getMessage());
-                return false;
-            } finally {
-                db.endTransaction();
-                db.close();
-            }
-        }
-    
+
+
         public boolean deleteCategory(int id) {
             SQLiteDatabase db = this.getWritableDatabase();
             db.beginTransaction();
@@ -517,7 +493,7 @@
                     return false;
                 }
                 cursor.close();
-    
+
                 int rowsAffected = db.delete("Categories", "id = ?", new String[]{String.valueOf(id)});
                 db.setTransactionSuccessful();
                 return rowsAffected > 0;
@@ -529,7 +505,7 @@
                 db.close();
             }
         }
-    
+
         public long ajouterPanier(Panier panier) {
             SQLiteDatabase db = this.getWritableDatabase();
             db.beginTransaction();
@@ -539,7 +515,7 @@
                 values.put("date_ajout", panier.getDateAjout());
                 values.put("date_modification", panier.getDateModification());
                 values.put("is_active", panier.isActive() ? 1 : 0);
-    
+
                 long id = db.insertOrThrow("panier", null, values);
                 db.setTransactionSuccessful();
                 return id;
@@ -551,7 +527,7 @@
                 db.close();
             }
         }
-    
+
         public boolean supprimerPanier(int panierId) {
             SQLiteDatabase db = this.getWritableDatabase();
             db.beginTransaction();
@@ -567,7 +543,7 @@
                 db.close();
             }
         }
-    
+
         public List<Panier> getAllPaniers() {
             List<Panier> paniers = new ArrayList<>();
             SQLiteDatabase db = this.getReadableDatabase();
@@ -595,7 +571,7 @@
             }
             return paniers;
         }
-    
+
         public boolean ajouterArticlePanier(ArticlePanier article) {
             SQLiteDatabase db = this.getWritableDatabase();
             db.beginTransaction();
@@ -609,7 +585,7 @@
                 values.put("date_ajout", article.getDateAjout());
                 values.put("date_modification", article.getDateModification());
                 values.put("is_active", article.isActive() ? 1 : 0);
-    
+
                 long result = db.insertOrThrow("article_panier", null, values);
                 db.setTransactionSuccessful();
                 return result != -1;
@@ -621,7 +597,7 @@
                 db.close();
             }
         }
-    
+
         public void ajouterUtilisateur(Users user) {
             SQLiteDatabase db = this.getWritableDatabase();
             db.beginTransaction();
@@ -639,7 +615,7 @@
                 values.put("pays", user.getPays());
                 values.put("image", user.getImage());
                 values.put("dateInscription", user.getDateInscription());
-    
+
                 db.insertOrThrow("users", null, values);
                 db.setTransactionSuccessful();
             } catch (Exception e) {
@@ -649,7 +625,7 @@
                 db.close();
             }
         }
-    
+
         public Users getUserByEmail(String email) {
             SQLiteDatabase db = this.getReadableDatabase();
             Cursor cursor = null;
@@ -682,7 +658,7 @@
             }
             return user;
         }
-    
+
         public List<Produits> getProductsByCategory(int categoryId) {
             List<Produits> products = new ArrayList<>();
             SQLiteDatabase db = this.getReadableDatabase();
@@ -722,6 +698,7 @@
             }
             return products;
         }
+
         public List<Produits> searchProducts(String query) {
             List<Produits> products = new ArrayList<>();
             SQLiteDatabase db = this.getReadableDatabase();
@@ -757,7 +734,7 @@
             }
             return products;
         }
-    
+
         public Categories getCategoryById(int id) {
             SQLiteDatabase db = this.getReadableDatabase();
             Cursor cursor = null;
@@ -782,7 +759,7 @@
             }
             return category;
         }
-    
+
         public Produits getProductById(int productId) {
             SQLiteDatabase db = this.getReadableDatabase();
             Cursor cursor = null;
@@ -815,7 +792,7 @@
             }
             return produit;
         }
-    
+
         public boolean isFavorite(int userId, int productId) {
             SQLiteDatabase db = this.getReadableDatabase();
             Cursor cursor = null;
@@ -833,7 +810,7 @@
                 db.close();
             }
         }
-    
+
         public Users getUserById(int userId) {
             SQLiteDatabase db = this.getReadableDatabase();
             Cursor cursor = null;
@@ -866,7 +843,7 @@
             }
             return user;
         }
-    
+
         public List<Users> getAllUsers() {
             List<Users> users = new ArrayList<>();
             SQLiteDatabase db = this.getReadableDatabase();
@@ -902,7 +879,7 @@
             }
             return users;
         }
-    
+
         public List<ArticlePanier> getAllArticlePaniers() {
             List<ArticlePanier> articles = new ArrayList<>();
             SQLiteDatabase db = this.getReadableDatabase();
@@ -934,7 +911,7 @@
             }
             return articles;
         }
-    
+
         public List<ArticlePanier> getArticlesByPanierId(int panierId) {
             List<ArticlePanier> articles = new ArrayList<>();
             SQLiteDatabase db = this.getReadableDatabase();
@@ -961,7 +938,7 @@
                         produit.setActive(cursor.getInt(cursor.getColumnIndexOrThrow("is_active")) == 1);
                         produit.setCategoryId(cursor.getInt(cursor.getColumnIndexOrThrow("category_id")));
                         produit.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
-    
+
                         ArticlePanier article = new ArticlePanier();
                         article.setId(cursor.getInt(cursor.getColumnIndexOrThrow("article_panier_id")));
                         article.setProduit(produit);
@@ -972,7 +949,7 @@
                         article.setDateAjout(cursor.getString(cursor.getColumnIndexOrThrow("date_ajout")));
                         article.setDateModification(cursor.getString(cursor.getColumnIndexOrThrow("date_modification")));
                         article.setActive(cursor.getInt(cursor.getColumnIndexOrThrow("is_active")) == 1);
-    
+
                         articles.add(article);
                     } while (cursor.moveToNext());
                 }
@@ -986,7 +963,7 @@
             }
             return articles;
         }
-    
+
         public void cleanOrphanedCartItems() {
             SQLiteDatabase db = this.getWritableDatabase();
             db.beginTransaction();
@@ -1001,7 +978,7 @@
                 db.close();
             }
         }
-    
+
         public boolean supprimerArticlePanier(int articleId) {
             SQLiteDatabase db = this.getWritableDatabase();
             db.beginTransaction();
@@ -1011,6 +988,264 @@
                 return rowsAffected > 0;
             } catch (Exception e) {
                 Log.e(TAG, "Error deleting article from panier: " + e.getMessage());
+                return false;
+            } finally {
+                db.endTransaction();
+                db.close();
+            }
+        }
+
+/*
+==================================================
+region 1
+ Méthodes à ajouter dans votre classe DBHelper
+*/
+
+// Méthodes corrigées à remplacer dans votre classe DBHelper
+
+        // Vérification d'existence des entités - CORRIGÉES
+        public boolean categoryExists(int categoryId) {
+            SQLiteDatabase db = this.getReadableDatabase();
+            Cursor cursor = null;
+            try {
+                cursor = db.query("Categories", new String[]{"id"}, // "Categories" au lieu de "categories"
+                        "id = ?", new String[]{String.valueOf(categoryId)},
+                        null, null, null);
+                return cursor.getCount() > 0;
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+                db.close();
+            }
+        }
+
+        public boolean productExists(int productId) {
+            SQLiteDatabase db = this.getReadableDatabase();
+            Cursor cursor = null;
+            try {
+                cursor = db.query("Products", new String[]{"id"}, // "Products" au lieu de "produits"
+                        "id = ?", new String[]{String.valueOf(productId)},
+                        null, null, null);
+                return cursor.getCount() > 0;
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+                db.close();
+            }
+        }
+
+        public boolean panierExists(int panierId) {
+            SQLiteDatabase db = this.getReadableDatabase();
+            Cursor cursor = null;
+            try {
+                cursor = db.query("panier", new String[]{"id"}, // "panier" au lieu de "paniers"
+                        "id = ?", new String[]{String.valueOf(panierId)},
+                        null, null, null);
+                return cursor.getCount() > 0;
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+                db.close();
+            }
+        }
+
+        public boolean articlePanierExists(int articleId) {
+            SQLiteDatabase db = this.getReadableDatabase();
+            Cursor cursor = null;
+            try {
+                cursor = db.query("article_panier", new String[]{"id"}, // "article_panier" au lieu de "articles_panier"
+                        "id = ?", new String[]{String.valueOf(articleId)},
+                        null, null, null);
+                return cursor.getCount() > 0;
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+                db.close();
+            }
+        }
+
+        // Insertion avec ID spécifique - CORRIGÉES
+        public boolean insertCategoryWithId(int id, String nom, String description) {
+            SQLiteDatabase db = this.getWritableDatabase();
+            db.beginTransaction();
+            try {
+                ContentValues values = new ContentValues();
+                values.put("id", id);
+                values.put("name", nom); // "name" au lieu de "nom"
+                values.put("description", description);
+
+                long result = db.insertWithOnConflict("Categories", null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                db.setTransactionSuccessful();
+                return result != -1;
+            } catch (Exception e) {
+                Log.e(TAG, "Error inserting category with ID: " + e.getMessage());
+                return false;
+            } finally {
+                db.endTransaction();
+                db.close();
+            }
+        }
+
+        public boolean insertProductWithId(int id, String nom, String description, double prix,
+                                           String image1, String image2, String image3, String image4,
+                                           int quantite, int categorieId, int utilisateurId, boolean active) {
+            SQLiteDatabase db = this.getWritableDatabase();
+            db.beginTransaction();
+            try {
+                ContentValues values = new ContentValues();
+                values.put("id", id);
+                values.put("name", nom); // "name" au lieu de "nom"
+                values.put("description", description);
+                values.put("price", prix); // "price" au lieu de "prix"
+                values.put("image1", image1);
+                values.put("image2", image2);
+                values.put("image3", image3);
+                values.put("image4", image4);
+                values.put("quantity", quantite); // "quantity" au lieu de "quantite"
+                values.put("category_id", categorieId); // "category_id" au lieu de "categorie_id"
+                values.put("user_id", utilisateurId); // "user_id" au lieu de "utilisateur_id"
+                values.put("is_active", active ? 1 : 0); // "is_active" au lieu de "active"
+                values.put("date_added", getCurrentDate());
+                values.put("date_modified", getCurrentDate());
+
+                long result = db.insertWithOnConflict("Products", null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                db.setTransactionSuccessful();
+                return result != -1;
+            } catch (Exception e) {
+                Log.e(TAG, "Error inserting product with ID: " + e.getMessage());
+                return false;
+            } finally {
+                db.endTransaction();
+                db.close();
+            }
+        }
+
+        // Méthodes de mise à jour - CORRIGÉES
+        public boolean updateCategoryById(int id, String nom, String description) {
+            SQLiteDatabase db = this.getWritableDatabase();
+            db.beginTransaction();
+            try {
+                ContentValues values = new ContentValues();
+                values.put("name", nom); // "name" au lieu de "nom"
+                values.put("description", description);
+
+                int rowsAffected = db.update("Categories", values, "id = ?", new String[]{String.valueOf(id)});
+                db.setTransactionSuccessful();
+                return rowsAffected > 0;
+            } catch (Exception e) {
+                Log.e(TAG, "Error updating category: " + e.getMessage());
+                return false;
+            } finally {
+                db.endTransaction();
+                db.close();
+            }
+        }
+
+        public boolean updateProductById(Produits product) {
+            if (product == null || product.getId() <= 0) {
+                Log.e(TAG, "Invalid product data");
+                return false;
+            }
+
+            SQLiteDatabase db = this.getWritableDatabase();
+            db.beginTransaction();
+            try {
+                ContentValues values = new ContentValues();
+                values.put("name", product.getNom()); // "name" au lieu de "nom"
+                values.put("description", product.getDescription());
+                values.put("price", product.getPrix()); // "price" au lieu de "prix"
+                values.put("image1", product.getImage1());
+                values.put("image2", product.getImage2());
+                values.put("image3", product.getImage3());
+                values.put("image4", product.getImage4());
+                values.put("quantity", product.getQuantite()); // "quantity" au lieu de "quantite"
+                values.put("is_active", product.isActive() ? 1 : 0); // "is_active" au lieu de "active"
+                values.put("category_id", product.getCategorie().getId()); // Utiliser getCategoryId() directement
+                values.put("user_id", product.getUtilisateur().getId()); // Utiliser getUserId() directement
+                values.put("date_modified", getCurrentDate());
+
+                int rowsAffected = db.update("Products", values, "id = ?", new String[]{String.valueOf(product.getId())});
+                db.setTransactionSuccessful();
+                return rowsAffected > 0;
+            } catch (Exception e) {
+                Log.e(TAG, "Error updating product: " + e.getMessage());
+                return false;
+            } finally {
+                db.endTransaction();
+                db.close();
+            }
+        }
+
+        public boolean updatePanierById(Panier panier) {
+            if (panier == null || panier.getId() <= 0) {
+                Log.e(TAG, "Invalid panier data");
+                return false;
+            }
+
+            SQLiteDatabase db = this.getWritableDatabase();
+            db.beginTransaction();
+            try {
+                ContentValues values = new ContentValues();
+                values.put("utilisateur_id", panier.getUtilisateur().getId());
+                values.put("date_modification", getCurrentDate());
+                values.put("is_active", panier.isActive() ? 1 : 0);
+
+                int rowsAffected = db.update("panier", values, "id = ?", new String[]{String.valueOf(panier.getId())});
+                db.setTransactionSuccessful();
+                return rowsAffected > 0;
+            } catch (Exception e) {
+                Log.e(TAG, "Error updating panier: " + e.getMessage());
+                return false;
+            } finally {
+                db.endTransaction();
+                db.close();
+            }
+        }
+
+        public boolean updateArticlePanierById(ArticlePanier article) {
+            if (article == null || article.getId() <= 0) {
+                Log.e(TAG, "Invalid article panier data");
+                return false;
+            }
+
+            SQLiteDatabase db = this.getWritableDatabase();
+            db.beginTransaction();
+            try {
+                ContentValues values = new ContentValues();
+                values.put("quantite", article.getQuantite());
+                values.put("prix_unitaire", article.getPrixUnitaire());
+                values.put("prix_total", article.getPrixTotal());
+                values.put("produit_id", article.getProduit().getId());
+                values.put("panier_id", article.getPanier().getId());
+                values.put("date_modification", getCurrentDate());
+                values.put("is_active", article.isActive() ? 1 : 0);
+
+                int rowsAffected = db.update("article_panier", values, "id = ?", new String[]{String.valueOf(article.getId())});
+                db.setTransactionSuccessful();
+                return rowsAffected > 0;
+            } catch (Exception e) {
+                Log.e(TAG, "Error updating article panier: " + e.getMessage());
+                return false;
+            } finally {
+                db.endTransaction();
+                db.close();
+            }
+        }
+
+        // Nettoyage des favoris - CORRIGÉE
+        public boolean clearUserFavorites(int userId) {
+            SQLiteDatabase db = this.getWritableDatabase();
+            db.beginTransaction();
+            try {
+                int rowsAffected = db.delete("Favorites", "user_id = ?", new String[]{String.valueOf(userId)});
+                db.setTransactionSuccessful();
+                return rowsAffected >= 0; // >= 0 car il peut ne pas y avoir de favoris à supprimer
+            } catch (Exception e) {
+                Log.e(TAG, "Error clearing user favorites: " + e.getMessage());
                 return false;
             } finally {
                 db.endTransaction();

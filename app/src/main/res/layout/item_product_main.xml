@@ -21,8 +21,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="-7dp"
-            android:background="@drawable/back"
-            android:orientation="horizontal"
+             android:orientation="horizontal"
             android:padding="10dp">
 
             <TextView
@@ -30,7 +29,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="4.6"
-                android:textColor="#8e44ad"
+                android:textColor="#1E8E44AD"
                 android:textSize="12sp" />
 
             <ImageView
@@ -44,7 +43,7 @@
                 android:id="@+id/btnWishlist"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:layout_marginStart="70dp"
+                android:layout_marginStart="80dp"
                 android:src="@drawable/wishlist"
                 android:contentDescription="Wishlist" />
 
@@ -57,6 +56,7 @@
         android:layout_width="match_parent"
         android:layout_height="120dp"
         android:scaleType="centerInside"
+        android:layout_marginTop="15dp"
         android:src="@drawable/tshirtsansbackground" />
 
     <!-- Nom du produit -->

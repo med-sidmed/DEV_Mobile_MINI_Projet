@@ -580,7 +580,7 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                     return;
                 }
 
-                boolean update = dbHelper.updateCategory(
+                boolean update = dbHelper.updateCategoryById(
                         category.getId(),
                         nomCategorie,
                         descriptionCategorie

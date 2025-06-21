@@ -26,108 +26,108 @@ public interface ApiService {
 
     // User Endpoints
     @GET("api/users")
-    Call<List<Users>> getAllUsers(@Header("Authorization") String token);
+    Call<List<Users>> getAllUsers();
 
     @GET("api/users/{id}")
-    Call<Users> getUserById(@Header("Authorization") String token, @Path("id") int id);
+    Call<Users> getUserById( @Path("id") int id);
 
     @GET("api/users/email")
-    Call<Users> getUserByEmail(@Header("Authorization") String token, @Query("email") String email);
+    Call<Users> getUserByEmail( @Query("email") String email);
 
     @POST("api/users/register")
-    Call<Users> registerUser(@Header("Authorization") String token, @Body Users user);
+    Call<Users> registerUser(@Body Users user);
 
     @PUT("api/users/{id}")
-    Call<Users> updateUser(@Header("Authorization") String token, @Path("id") int id, @Body Users user);
+    Call<Users> updateUser(@Path("id") int id, @Body Users user);
 
     @DELETE("api/users/{id}")
-    Call<Void> deleteUser(@Header("Authorization") String token, @Path("id") int id);
+    Call<Void> deleteUser( @Path("id") int id);
 
     // Favorite Endpoints
     @GET("api/favorites/user/{userId}/products")
-    Call<List<Produits>> getFavoriteProducts(@Header("Authorization") String token, @Path("userId") int userId);
+    Call<List<Produits>> getFavoriteProducts(@Path("userId") int userId);
 
     @POST("api/favorites/user/{userId}/product/{productId}")
-    Call<Void> addToFavorites(@Header("Authorization") String token, @Path("userId") int userId, @Path("productId") int productId);
+    Call<Void> addToFavorites(@Path("userId") int userId, @Path("productId") int productId);
 
     @DELETE("api/favorites/user/{userId}/product/{productId}")
-    Call<Void> removeFromFavorites(@Header("Authorization") String token, @Path("userId") int userId, @Path("productId") int productId);
+    Call<Void> removeFromFavorites( @Path("userId") int userId, @Path("productId") int productId);
 
     @GET("api/favorites/user/{userId}/product/{productId}")
-    Call<Boolean> isProductInFavorites(@Header("Authorization") String token, @Path("userId") int userId, @Path("productId") int productId);
+    Call<Boolean> isProductInFavorites( @Path("userId") int userId, @Path("productId") int productId);
 
     // Cart Endpoints
     @GET("api/cart/user/{userId}")
-    Call<Panier> getCartByUserId(@Header("Authorization") String token, @Path("userId") int userId);
+    Call<Panier> getCartByUserId( @Path("userId") int userId);
 
     @POST("api/cart")
-    Call<Panier> createCart(@Header("Authorization") String token, @Body PanierDTO panierDTO);
+    Call<Panier> createCart( @Body PanierDTO panierDTO);
 
     @POST("api/cart/add")
-    Call<ArticlePanier> addToCart(@Header("Authorization") String token, @Body ArticlePanierDTO cartItemDTO);
+    Call<ArticlePanier> addToCart( @Body ArticlePanierDTO cartItemDTO);
 
     @PUT("api/cart/update/{cartItemId}")
-    Call<ArticlePanier> updateCartItem(@Header("Authorization") String token, @Path("cartItemId") int cartItemId, @Body ArticlePanier cartItem);
+    Call<ArticlePanier> updateCartItem( @Path("cartItemId") int cartItemId, @Body ArticlePanier cartItem);
 
     @DELETE("api/cart/remove/{cartItemId}")
-    Call<Void> removeFromCart(@Header("Authorization") String token, @Path("cartItemId") int cartItemId);
+    Call<Void> removeFromCart( @Path("cartItemId") int cartItemId);
 
     @DELETE("api/cart/clear/{userId}")
-    Call<Void> clearCart(@Header("Authorization") String token, @Path("userId") int userId);
+    Call<Void> clearCart( @Path("userId") int userId);
 
     @GET("api/cart/allArticles")
-    Call<List<ArticlePanier>> getAllArticlesPanier(@Header("Authorization") String token);
+    Call<List<ArticlePanier>> getAllArticlesPanier();
 
     @GET("api/cart/all")
-    Call<List<Panier>> getAllPaniers(@Header("Authorization") String token);
+    Call<List<Panier>> getAllPaniers();
 
     @GET("api/cart/articlepanier/{id}")
-    Call<ArticlePanier> getArticlePanierById(@Header("Authorization") String token, @Path("id") int id);
+    Call<ArticlePanier> getArticlePanierById( @Path("id") int id);
 
     @GET("api/cart/users/{userId}/articles")
-    Call<List<ArticlePanier>> getUserArticles(@Header("Authorization") String token, @Path("userId") int userId);
+    Call<List<ArticlePanier>> getUserArticles( @Path("userId") int userId);
 
     @DELETE("api/cart/clean-orphaned")
-    Call<Void> cleanOrphanedCartItems(@Header("Authorization") String token);
+    Call<Void> cleanOrphanedCartItems();
 
     // Product Endpoints
     @GET("api/products")
-    Call<List<Produits>> getAllProducts(@Header("Authorization") String token);
+    Call<List<Produits>> getAllProducts();
 
     @GET("api/products/{id}")
-    Call<Produits> getProductById(@Header("Authorization") String token, @Path("id") int id);
+    Call<Produits> getProductById( @Path("id") int id);
 
     @GET("api/products/category/{categoryId}")
-    Call<List<Produits>> getProductsByCategory(@Header("Authorization") String token, @Path("categoryId") int categoryId);
+    Call<List<Produits>> getProductsByCategory( @Path("categoryId") int categoryId);
 
     @GET("api/products/search")
-    Call<List<Produits>> searchProducts(@Header("Authorization") String token, @Query("query") String query);
+    Call<List<Produits>> searchProducts( @Query("query") String query);
 
     @POST("api/products")
-    Call<Boolean> createProduct(@Header("Authorization") String token, @Body ProductDTO productDTO);
+    Call<Boolean> createProduct( @Body ProductDTO productDTO);
 
     @PUT("api/products/{id}")
-    Call<Boolean> updateProduct(@Header("Authorization") String token, @Path("id") int id, @Body ProductDTO productDTO);
+    Call<Boolean> updateProduct( @Path("id") int id, @Body ProductDTO productDTO);
 
     @DELETE("api/products/{id}")
-    Call<Boolean> deleteProduct(@Header("Authorization") String token, @Path("id") int id);
+    Call<Boolean> deleteProduct( @Path("id") int id);
 
     // Category Endpoints
     @GET("api/categories")
-    Call<List<Categories>> getAllCategories(@Header("Authorization") String token);
+    Call<List<Categories>> getAllCategories();
 
     @GET("api/categories/{id}")
-    Call<Categories> getCategoryById(@Header("Authorization") String token, @Path("id") int id);
+    Call<Categories> getCategoryById( @Path("id") int id);
 
     @GET("api/categories/search")
-    Call<List<Categories>> getCategoriesByName(@Header("Authorization") String token, @Query("name") String name);
+    Call<List<Categories>> getCategoriesByName( @Query("name") String name);
 
     @POST("api/categories")
-    Call<Boolean> createCategory(@Header("Authorization") String token, @Body CategoryDTO categoryDTO);
+    Call<Boolean> createCategory( @Body CategoryDTO categoryDTO);
 
     @PUT("api/categories/{id}")
-    Call<Boolean> updateCategory(@Header("Authorization") String token, @Path("id") int id, @Body CategoryDTO categoryDTO);
+    Call<Boolean> updateCategory( @Path("id") int id, @Body CategoryDTO categoryDTO);
 
     @DELETE("api/categories/{id}")
-    Call<Boolean> deleteCategory(@Header("Authorization") String token, @Path("id") int id);
+    Call<Boolean> deleteCategory( @Path("id") int id);
 }
