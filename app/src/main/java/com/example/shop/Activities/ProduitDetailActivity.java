@@ -11,8 +11,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-
 import com.bumptech.glide.Glide;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import com.example.shop.Utils.AppExecutors;
 import com.example.shop.Databases.DBHelper;
 import com.example.shop.Models.Produits;
 import com.example.shop.R;
@@ -24,7 +26,6 @@ public class ProduitDetailActivity extends AppCompatActivity {
     private DBHelper dbHelper;
     private Produits product;
     private int quantity = 1;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,57 +52,54 @@ public class ProduitDetailActivity extends AppCompatActivity {
         }
 
         // Load product
-        try {
-            product = dbHelper.getProductById(productId);
-        } catch (Exception e) {
-            Log.e(TAG, "Error loading product with ID " + productId + ": " + e.getMessage(), e);
-            Toast.makeText(this, "Erreur de chargement du produit", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-        if (product == null) {
-            Log.e(TAG, "Product not found for ID: " + productId);
-            Toast.makeText(this, "Produit non trouvé", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            try {
+                final Produits loadedProduct = dbHelper.getProductById(productId);
+                AppExecutors.getInstance().mainThread().execute(() -> {
+                    if (loadedProduct == null) {
+                        Log.e(TAG, "Product not found for ID: " + productId);
+                        Toast.makeText(this, "Produit non trouvé", Toast.LENGTH_SHORT).show();
+                        finish();
+                        return;
+                    }
+                    product = loadedProduct;
+                    setupProductUI();
+                });
+            } catch (Exception e) {
+                Log.e(TAG, "Error loading product with ID " + productId + ": " + e.getMessage(), e);
+                AppExecutors.getInstance().mainThread().execute(() -> {
+                    Toast.makeText(this, "Erreur de chargement du produit", Toast.LENGTH_SHORT).show();
+                    finish();
+                });
+            }
+        });
+    }
 
+    private void setupProductUI() {
         // Setup toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
-        if (toolbar == null) {
-            Log.e(TAG, "Toolbar not found");
-            finish();
-            return;
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            }
+            toolbar.setNavigationOnClickListener(v -> finish());
         }
-        setSupportActionBar(toolbar);
-        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
-        toolbar.setNavigationOnClickListener(v -> finish());
 
         // Initialize views
         ImageView imageViewProduct = findViewById(R.id.imageViewProduct);
-        ImageView imageViewSecondary1 = findViewById(R.id.imageViewSecondary1);
-        ImageView imageViewSecondary2 = findViewById(R.id.imageViewSecondary2);
         TextView textViewProductName = findViewById(R.id.textViewProductName);
         TextView textViewPrice = findViewById(R.id.textViewPrice);
         TextView textViewAvailability = findViewById(R.id.textViewAvailability);
-        TextView textViewQuantity = findViewById(R.id.textViewQuantity);
-        TextView textViewStockInfo = findViewById(R.id.textViewStockInfo);
         TextView textViewDescription = findViewById(R.id.textViewDescription);
-        TextView textViewWeight = findViewById(R.id.textViewWeight);
-        TextView textViewDimensions = findViewById(R.id.textViewDimensions);
-        TextView textViewColor = findViewById(R.id.textViewColor);
-        TextView textViewReference = findViewById(R.id.textViewReference);
-        Button buttonMinus = findViewById(R.id.buttonMinus);
-        Button buttonPlus = findViewById(R.id.buttonPlus);
         Button buttonAddToCart = findViewById(R.id.buttonAddToCart);
+        FloatingActionButton fabWishlist = findViewById(R.id.fabWishlist);
 
         // Check for null views
         if (imageViewProduct == null || textViewProductName == null || textViewPrice == null ||
-                textViewAvailability == null || textViewQuantity == null || textViewStockInfo == null ||
-                textViewDescription == null || textViewWeight == null || textViewDimensions == null ||
-                textViewColor == null || textViewReference == null || buttonMinus == null ||
-                buttonPlus == null || buttonAddToCart == null) {
-            Log.e(TAG, "One or more views are null");
+                textViewAvailability == null || textViewDescription == null || buttonAddToCart == null
+                || fabWishlist == null) {
+            Log.e(TAG, "One or more essential views are null");
             Toast.makeText(this, "Erreur d'initialisation de la page", Toast.LENGTH_SHORT).show();
             finish();
             return;
@@ -111,14 +109,10 @@ public class ProduitDetailActivity extends AppCompatActivity {
         textViewProductName.setText(product.getNom() != null ? product.getNom() : "N/A");
         textViewPrice.setText(String.format("%.2f €", product.getPrix()));
         textViewAvailability.setText(product.getStock() > 0 ? "En stock" : "Rupture de stock");
-        textViewAvailability.setBackgroundResource(product.getStock() > 0 ? R.drawable.availability_badge : R.drawable.out_of_stock_badge);
-        textViewQuantity.setText(String.valueOf(quantity));
-        textViewStockInfo.setText(product.getStock() + " disponibles");
-        textViewDescription.setText(product.getDescription() != null ? product.getDescription() : "Aucune description disponible");
-        textViewWeight.setText("N/A");
-        textViewDimensions.setText("N/A");
-        textViewColor.setText("N/A");
-        textViewReference.setText("N/A" );
+        textViewAvailability.setBackgroundResource(
+                product.getStock() > 0 ? R.drawable.availability_badge : R.drawable.out_of_stock_badge);
+        textViewDescription
+                .setText(product.getDescription() != null ? product.getDescription() : "Aucune description disponible");
 
         // Load images
         if (product.getImage1() != null && !product.getImage1().isEmpty()) {
@@ -127,39 +121,14 @@ public class ProduitDetailActivity extends AppCompatActivity {
                     .placeholder(R.drawable.image_not_found)
                     .into(imageViewProduct);
         }
-        if (product.getImage2() != null && !product.getImage2().isEmpty()) {
-            Glide.with(this)
-                    .load(product.getImage2())
-                    .placeholder(R.drawable.image_not_found)
-                    .into(imageViewSecondary1);
-        }
-        if (product.getImage3() != null && !product.getImage3().isEmpty()) {
-            Glide.with(this)
-                    .load(product.getImage3())
-                    .placeholder(R.drawable.image_not_found)
-                    .into(imageViewSecondary2);
-        }
 
-        // Quantity controls
-        buttonMinus.setOnClickListener(v -> {
-            if (quantity > 1) {
-                quantity--;
-                textViewQuantity.setText(String.valueOf(quantity));
-            }
+        // Wishlist click
+        fabWishlist.setOnClickListener(v -> {
+            Toast.makeText(this, "Ajouté aux favoris", Toast.LENGTH_SHORT).show();
         });
 
-        buttonPlus.setOnClickListener(v -> {
-            if (quantity < product.getStock()) {
-                quantity++;
-                textViewQuantity.setText(String.valueOf(quantity));
-            } else {
-                Toast.makeText(this, "Stock maximum atteint", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        // Add to cart
         buttonAddToCart.setOnClickListener(v -> {
-            Toast.makeText(this, quantity + " " + product.getNom() + " ajouté(s) au panier", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, product.getNom() + " ajouté au panier", Toast.LENGTH_SHORT).show();
             // Implement add to cart logic here
         });
     }

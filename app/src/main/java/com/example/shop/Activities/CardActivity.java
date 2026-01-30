@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.shop.Adapter.CartAdapter;
+import com.example.shop.Utils.AppExecutors;
 import com.example.shop.Databases.DBHelper;
 import com.example.shop.Models.ArticlePanier;
 import com.example.shop.Models.Panier;
@@ -54,7 +55,7 @@ public class CardActivity extends AppCompatActivity {
         dbHelper = new DBHelper(this);
 
         goBack = findViewById(R.id.go_back);
-        wishlestPage = findViewById(R.id.wishlest_page);
+        wishlestPage = findViewById(R.id.wishlist_page);
         homePage = findViewById(R.id.home_page);
         profilePage = findViewById(R.id.profile_page);
         recyclerViewCart = findViewById(R.id.recyclerViewCart);
@@ -114,31 +115,31 @@ public class CardActivity extends AppCompatActivity {
     }
 
     private void refreshCart(int userId) {
-        int panierId = getPanierIdForUser(userId);
-        Log.d(TAG, "Panier ID: " + panierId);
-        cartItems = dbHelper.getArticlesByPanierId(panierId);
-        Log.d(TAG, "Nombre d'articles dans le panier: " + cartItems.size());
-        for (ArticlePanier article : cartItems) {
-            Log.d(TAG, "Article: " + article.getProduit().getNom() + ", Quantité: " + article.getQuantite());
-        }
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            int panierId = getPanierIdForUser(userId);
+            Log.d(TAG, "Panier ID: " + panierId);
+            List<ArticlePanier> items = dbHelper.getArticlesByPanierId(panierId);
+            
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                cartItems = items;
+                Log.d(TAG, "Nombre d'articles dans le panier: " + cartItems.size());
+                
+                recyclerViewCart.setLayoutManager(new LinearLayoutManager(this));
+                cartAdapter = new CartAdapter(cartItems, dbHelper);
+                recyclerViewCart.setAdapter(cartAdapter);
 
-        recyclerViewCart.setLayoutManager(new LinearLayoutManager(this));
-        cartAdapter = new CartAdapter(cartItems, dbHelper);
-        recyclerViewCart.setAdapter(cartAdapter);
-
-        if (cartItems.isEmpty()) {
-            emptyCartView.setVisibility(View.VISIBLE);
-            recyclerViewCart.setVisibility(View.GONE);
-            btnCheckout.setEnabled(false);
-            Log.d(TAG, "Panier vide, afficher emptyCartView");
-        } else {
-            emptyCartView.setVisibility(View.GONE);
-            recyclerViewCart.setVisibility(View.VISIBLE);
-            btnCheckout.setEnabled(true);
-            Log.d(TAG, "Panier non vide, afficher RecyclerView");
-        }
-
-        updateCartSummary();
+                if (cartItems.isEmpty()) {
+                    emptyCartView.setVisibility(View.VISIBLE);
+                    recyclerViewCart.setVisibility(View.GONE);
+                    btnCheckout.setEnabled(false);
+                } else {
+                    emptyCartView.setVisibility(View.GONE);
+                    recyclerViewCart.setVisibility(View.VISIBLE);
+                    btnCheckout.setEnabled(true);
+                }
+                updateCartSummary();
+            });
+        });
     }
 
     private int getCurrentUserId() {

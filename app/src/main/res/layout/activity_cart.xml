@@ -21,17 +21,15 @@
 
         <ImageView
             android:id="@+id/go_back"
-            android:layout_width="30sp"
-            android:layout_height="30sp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:src="@drawable/arrow_back"/>
         <TextView
             android:layout_gravity="center"
             android:gravity="center"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:layout_width="0sp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:textColor="@color/black"
@@ -185,7 +183,7 @@
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:layout_marginBottom="20sp"
+        android:layout_marginBottom="20dp"
         android:orientation="horizontal"
         android:background="@drawable/footer_background"
         android:elevation="8dp"
@@ -194,7 +192,7 @@
 
         <!-- Explore -->
         <LinearLayout
-            android:id="@id/home_page"
+            android:id="@+id/home_page"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -225,7 +223,7 @@
             android:orientation="vertical">
 
             <ImageView
-                android:id="@+id/wishlest_page"
+                android:id="@+id/wishlist_page"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/wishlist"
@@ -275,7 +273,7 @@
             <ImageView
                  android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/cart_icon"
+                android:src="@drawable/profile_icon"
                 android:contentDescription="Profile" />
 
             <TextView

@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.shop.Databases.DBHelper;
 import com.example.shop.Models.Users;
+import com.example.shop.Utils.PasswordUtils;
 import com.example.shop.R;
 
 public class LoginActivity extends AppCompatActivity {
@@ -71,7 +72,7 @@ public class LoginActivity extends AppCompatActivity {
 
                 // Vérification des identifiants
                 Users user = dbHelper.getUserByEmail(email);
-                if (user != null && user.getPassword().equals(password)) {
+                if (user != null && user.getPassword().equals(PasswordUtils.hashPassword(password))) {
                     // Stocker les informations de l'utilisateur dans SharedPreferences
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putInt(KEY_USER_ID, user.getId());

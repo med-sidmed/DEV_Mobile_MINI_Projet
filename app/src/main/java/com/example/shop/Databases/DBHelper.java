@@ -23,7 +23,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private static final String TAG = "DBHelper";
     private static final String DATABASE_NAME = "shop.db";
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 5;
     public DBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -102,6 +102,11 @@ public class DBHelper extends SQLiteOpenHelper {
                 "FOREIGN KEY(user_id) REFERENCES users(id), " +
                 "FOREIGN KEY(product_id) REFERENCES Products(id))";
         db.execSQL(CREATE_TABLE_FAVORITES);
+
+        // Optimization: Add indexes for faster lookups
+        db.execSQL("CREATE INDEX idx_favorites_user_prod ON Favorites(user_id, product_id)");
+        db.execSQL("CREATE INDEX idx_products_active ON Products(is_active)");
+        db.execSQL("CREATE INDEX idx_panier_user ON panier(utilisateur_id)");
     }
 
     @Override
@@ -118,7 +123,16 @@ public class DBHelper extends SQLiteOpenHelper {
                     "FOREIGN KEY(product_id) REFERENCES Products(id))";
             db.execSQL(CREATE_TABLE_FAVORITES);
         }
-        // Si d'autres modifications sont nécessaires à l'avenir, elles peuvent être ajoutées ici
+        if (oldVersion < 5) {
+            // Optimization: Add indexes in version 5
+            try {
+                db.execSQL("CREATE INDEX idx_favorites_user_prod ON Favorites(user_id, product_id)");
+                db.execSQL("CREATE INDEX idx_products_active ON Products(is_active)");
+                db.execSQL("CREATE INDEX idx_panier_user ON panier(utilisateur_id)");
+            } catch (Exception e) {
+                Log.e(TAG, "Error creating indexes: " + e.getMessage());
+            }
+        }
     }
 
     public String getCurrentDate() {
@@ -632,24 +646,33 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public Users getUserByEmail(String email) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query("users", null, "email=?", new String[]{email}, null, null, null);
-        if (cursor != null && cursor.moveToFirst()) {
-            Users user = new Users();
-            user.setId(cursor.getInt(cursor.getColumnIndex("id")));
-            user.setNom(cursor.getString(cursor.getColumnIndex("nom")));
-            user.setPrenom(cursor.getString(cursor.getColumnIndex("prenom")));
-            user.setEmail(cursor.getString(cursor.getColumnIndex("email")));
-            user.setPassword(cursor.getString(cursor.getColumnIndex("password")));
-            user.setRole(cursor.getString(cursor.getColumnIndex("role")));
-            user.setAdresse(cursor.getString(cursor.getColumnIndex("adresse")));
-            user.setTelephone(cursor.getString(cursor.getColumnIndex("telephone")));
-            user.setVille(cursor.getString(cursor.getColumnIndex("ville")));
-            user.setCodePostal(cursor.getString(cursor.getColumnIndex("codePostal")));
-            user.setPays(cursor.getString(cursor.getColumnIndex("pays")));
-            user.setImage(cursor.getString(cursor.getColumnIndex("image")));
-            user.setDateInscription(cursor.getString(cursor.getColumnIndex("dateInscription")));
-            cursor.close();
-            return user;
+        Cursor cursor = null;
+        try {
+            cursor = db.query("users", null, "email=?", new String[]{email}, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                Users user = new Users();
+                user.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                user.setNom(cursor.getString(cursor.getColumnIndexOrThrow("nom")));
+                user.setPrenom(cursor.getString(cursor.getColumnIndexOrThrow("prenom")));
+                user.setEmail(cursor.getString(cursor.getColumnIndexOrThrow("email")));
+                user.setPassword(cursor.getString(cursor.getColumnIndexOrThrow("password")));
+                user.setRole(cursor.getString(cursor.getColumnIndexOrThrow("role")));
+                user.setAdresse(cursor.getString(cursor.getColumnIndexOrThrow("adresse")));
+                user.setTelephone(cursor.getString(cursor.getColumnIndexOrThrow("telephone")));
+                user.setVille(cursor.getString(cursor.getColumnIndexOrThrow("ville")));
+                user.setCodePostal(cursor.getString(cursor.getColumnIndexOrThrow("codePostal")));
+                user.setPays(cursor.getString(cursor.getColumnIndexOrThrow("pays")));
+                user.setImage(cursor.getString(cursor.getColumnIndexOrThrow("image")));
+                user.setDateInscription(cursor.getString(cursor.getColumnIndexOrThrow("dateInscription")));
+                return user;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching user by email: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
         }
         return null;
     }
@@ -786,6 +809,25 @@ public class DBHelper extends SQLiteOpenHelper {
             db.close();
         }
         return produit;
+    }
+
+    public java.util.Set<Integer> getFavoriteProductIds(int userId) {
+        java.util.Set<Integer> favoriteIds = new java.util.HashSet<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.query("Favorites", new String[]{"product_id"}, "user_id = ? AND is_active = 1",
+                    new String[]{String.valueOf(userId)}, null, null, null);
+            while (cursor != null && cursor.moveToNext()) {
+                favoriteIds.add(cursor.getInt(0));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching favorite IDs: " + e.getMessage());
+        } finally {
+            if (cursor != null) cursor.close();
+            db.close();
+        }
+        return favoriteIds;
     }
 
     public boolean isFavorite(int userId, int productId) {

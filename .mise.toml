@@ -1,0 +1,12 @@
+# Shop Manager - Tool Version Management
+# See: https://mise.jdx.dev/
+
+[tools]
+java = "temurin-17"    # Required for Android development
+gradle = "8.6"         # Matches Gradle Kotlin DSL setup
+
+# Optional: Uncomment if needed later
+# node = "20"          # For CI scripts, Fastlane, or tooling
+# ruby = "3.3"         # For Fastlane (iOS/Android automation)
+
+

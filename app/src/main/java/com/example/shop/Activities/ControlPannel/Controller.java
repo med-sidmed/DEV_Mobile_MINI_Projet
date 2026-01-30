@@ -1,5 +1,6 @@
 package com.example.shop.Activities.ControlPannel;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -21,12 +22,13 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.shop.Utils.AppExecutors;
 import com.example.shop.Activities.MainActivity;
 import com.example.shop.Adapter.CategorieAdapter;
 import com.example.shop.Adapter.ProduitAdapter;
-import com.example.shop.Databases.DBHelper;
 import com.example.shop.Models.Categories;
 import com.example.shop.Models.Produits;
+import com.example.shop.Databases.DBHelper;
 import com.example.shop.R;
 
 import java.util.List;
@@ -193,27 +195,31 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                         return;
                     }
 
-                    boolean insert = dbHelper.insertProduct(
-                            nomProduit,
-                            descriptionProduit,
-                            prixProduit,
-                            TextUtils.isEmpty(image1Text) ? null : image1Text,
-                            TextUtils.isEmpty(image2Text) ? null : image2Text,
-                            TextUtils.isEmpty(image3Text) ? null : image3Text,
-                            TextUtils.isEmpty(image4Text) ? null : image4Text,
-                            quantiteProduit,
-                            CategorieId,
-                            userId,
-                            true
-                    );
+                    AppExecutors.getInstance().diskIO().execute(() -> {
+                        boolean insert = dbHelper.insertProduct(
+                                nomProduit,
+                                descriptionProduit,
+                                prixProduit,
+                                TextUtils.isEmpty(image1Text) ? null : image1Text,
+                                TextUtils.isEmpty(image2Text) ? null : image2Text,
+                                TextUtils.isEmpty(image3Text) ? null : image3Text,
+                                TextUtils.isEmpty(image4Text) ? null : image4Text,
+                                quantiteProduit,
+                                0,
+                                userId,
+                                true
+                        );
 
-                    if (insert) {
-                        Toast.makeText(this, "Produit ajouté avec succès", Toast.LENGTH_SHORT).show();
-                        ShowProduitList();
-                    } else {
-                        Toast.makeText(this, "Erreur lors de l'ajout du produit", Toast.LENGTH_SHORT).show();
-                        Log.e(TAG, "Failed to insert product into database");
-                    }
+                        AppExecutors.getInstance().mainThread().execute(() -> {
+                            if (insert) {
+                                Toast.makeText(Controller.this, "Produit ajouté avec succès", Toast.LENGTH_SHORT).show();
+                                ShowProduitList();
+                            } else {
+                                Toast.makeText(Controller.this, "Erreur lors de l'ajout du produit", Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, "Failed to insert product into database");
+                            }
+                        });
+                    });
 
                 } catch (Exception e) {
                     Toast.makeText(this, "Erreur : " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -245,15 +251,18 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                         return;
                     }
 
-                    boolean insert = dbHelper.insertCategory(nomCategorie, descriptionCategorie);
-
-                    if (insert) {
-                        Toast.makeText(this, "Catégorie ajoutée avec succès", Toast.LENGTH_SHORT).show();
-                        ShowCategorie();
-                    } else {
-                        Toast.makeText(this, "Erreur lors de l'ajout de la catégorie", Toast.LENGTH_SHORT).show();
-                        Log.e(TAG, "Failed to insert category into database");
-                    }
+                    AppExecutors.getInstance().diskIO().execute(() -> {
+                        boolean insert = dbHelper.insertCategory(nomCategorie, descriptionCategorie);
+                        AppExecutors.getInstance().mainThread().execute(() -> {
+                            if (insert) {
+                                Toast.makeText(Controller.this, "Catégorie ajoutée avec succès", Toast.LENGTH_SHORT).show();
+                                ShowCategorie();
+                            } else {
+                                Toast.makeText(Controller.this, "Erreur lors de l'ajout de la catégorie", Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, "Failed to insert category into database");
+                            }
+                        });
+                    });
 
                 } catch (Exception e) {
                     Toast.makeText(this, "Erreur : " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -266,37 +275,46 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
     }
 
     private void ShowProduitList() {
-        List<Produits> produitsList = dbHelper.getAllProducts();
-        if (produitsList == null || produitsList.isEmpty()) {
-            Toast.makeText(this, "Aucun produit trouvé", Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "No products found in database");
-            return;
-        }
-        if (produitAdapter == null) {
-            produitAdapter = new ProduitAdapter(produitsList, this, this);
-            recyclerProduits.setAdapter(produitAdapter);
-        } else {
-            produitAdapter.updateData(produitsList);
-        }
-        Log.d(TAG, "Loaded " + produitsList.size() + " products");
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            List<Produits> produitsList = dbHelper.getAllProducts();
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                if (produitsList == null || produitsList.isEmpty()) {
+                    Toast.makeText(this, "Aucun produit trouvé", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "No products found in database");
+                    return;
+                }
+                if (produitAdapter == null) {
+                    produitAdapter = new ProduitAdapter(produitsList, this, this);
+                    recyclerProduits.setAdapter(produitAdapter);
+                } else {
+                    produitAdapter.updateData(produitsList);
+                }
+                Log.d(TAG, "Loaded " + produitsList.size() + " products");
+            });
+        });
     }
 
     private void ShowCategorie() {
-        List<Categories> categoriesList = dbHelper.getAllCategories();
-        if (categoriesList == null || categoriesList.isEmpty()) {
-            Toast.makeText(this, "Aucune catégorie trouvée", Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "No categories found in database");
-            return;
-        }
-        if (categorieAdapter == null) {
-            categorieAdapter = new CategorieAdapter(categoriesList, this, this);
-            recyclerCategories.setAdapter(categorieAdapter);
-        } else {
-            categorieAdapter.updateData(categoriesList);
-        }
-        Log.d(TAG, "Loaded " + categoriesList.size() + " categories");
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            List<Categories> categoriesList = dbHelper.getAllCategories();
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                if (categoriesList == null || categoriesList.isEmpty()) {
+                    Toast.makeText(this, "Aucune catégorie trouvée", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "No categories found in database");
+                    return;
+                }
+                if (categorieAdapter == null) {
+                    categorieAdapter = new CategorieAdapter(categoriesList, this, this);
+                    recyclerCategories.setAdapter(categorieAdapter);
+                } else {
+                    categorieAdapter.updateData(categoriesList);
+                }
+                Log.d(TAG, "Loaded " + categoriesList.size() + " categories");
+            });
+        });
     }
 
+    @SuppressLint("DefaultLocale")
     @Override
     public void onEditProduct(Produits produit, int position) {
         if (produit == null) {
@@ -342,17 +360,23 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
         image4.setText(produit.getImage4() != null ? produit.getImage4() : "");
 
         // Pre-check the appropriate category checkbox
-        int currentCategoryId = produit.getCategorie().getId();
-        Categories category = dbHelper.getCategoryById(currentCategoryId);
-        if (category != null) {
-            String categoryName = category.getNom();
-            if ("Vêtements".equals(categoryName)) {
-                clothes.setChecked(true);
-            } else if ("Outils".equals(categoryName)) {
-                outils.setChecked(true);
-            } else if ("Digital".equals(categoryName)) {
-                digitals.setChecked(true);
-            }
+        if (produit.getCategorie() != null) {
+            int currentCategoryId = produit.getCategorie().getId();
+            AppExecutors.getInstance().diskIO().execute(() -> {
+                Categories category = dbHelper.getCategoryById(currentCategoryId);
+                if (category != null) {
+                    AppExecutors.getInstance().mainThread().execute(() -> {
+                        String categoryName = category.getNom();
+                        if ("Vêtements".equals(categoryName)) {
+                            clothes.setChecked(true);
+                        } else if ("Outils".equals(categoryName)) {
+                            outils.setChecked(true);
+                        } else if ("Digital".equals(categoryName)) {
+                            digitals.setChecked(true);
+                        }
+                    });
+                }
+            });
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -445,28 +469,32 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                     return;
                 }
 
-                boolean update = dbHelper.updateProduct(
-                        produit.getId(),
-                        nomProduit,
-                        descriptionProduit,
-                        prixProduit,
-                        TextUtils.isEmpty(image1Text) ? null : image1Text,
-                        TextUtils.isEmpty(image2Text) ? null : image2Text,
-                        TextUtils.isEmpty(image3Text) ? null : image3Text,
-                        TextUtils.isEmpty(image4Text) ? null : image4Text,
-                        quantiteProduit,
-                        CategorieId,
-                        produit.getUtilisateur().getId(),
-                        produit.isActive()
-                );
+                AppExecutors.getInstance().diskIO().execute(() -> {
+                    boolean update = dbHelper.updateProduct(
+                            produit.getId(),
+                            nomProduit,
+                            descriptionProduit,
+                            prixProduit,
+                            TextUtils.isEmpty(image1Text) ? null : image1Text,
+                            TextUtils.isEmpty(image2Text) ? null : image2Text,
+                            TextUtils.isEmpty(image3Text) ? null : image3Text,
+                            TextUtils.isEmpty(image4Text) ? null : image4Text,
+                            quantiteProduit,
+                            0,
+                            produit.getUtilisateur().getId(),
+                            produit.isActive()
+                    );
 
-                if (update) {
-                    Toast.makeText(this, "Produit modifié avec succès", Toast.LENGTH_SHORT).show();
-                    ShowProduitList();
-                } else {
-                    Toast.makeText(this, "Erreur lors de la modification du produit", Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Failed to update product in database");
-                }
+                    AppExecutors.getInstance().mainThread().execute(() -> {
+                        if (update) {
+                            Toast.makeText(Controller.this, "Produit modifié avec succès", Toast.LENGTH_SHORT).show();
+                            ShowProduitList();
+                        } else {
+                            Toast.makeText(Controller.this, "Erreur lors de la modification du produit", Toast.LENGTH_SHORT).show();
+                            Log.e(TAG, "Failed to update product in database");
+                        }
+                    });
+                });
 
             } catch (Exception e) {
                 Toast.makeText(this, "Erreur : " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -483,14 +511,18 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                 .setTitle("Supprimer le Produit")
                 .setMessage("Êtes-vous sûr de vouloir supprimer " + produit.getNom() + " ?")
                 .setPositiveButton("Supprimer", (dialog, which) -> {
-                    boolean delete = dbHelper.deleteProduct(produit.getId());
-                    if (delete) {
-                        Toast.makeText(this, "Produit supprimé avec succès", Toast.LENGTH_SHORT).show();
-                        ShowProduitList();
-                    } else {
-                        Toast.makeText(this, "Erreur lors de la suppression du produit", Toast.LENGTH_SHORT).show();
-                        Log.e(TAG, "Failed to delete product from database");
-                    }
+                    AppExecutors.getInstance().diskIO().execute(() -> {
+                        boolean delete = dbHelper.deleteProduct(produit.getId());
+                        AppExecutors.getInstance().mainThread().execute(() -> {
+                            if (delete) {
+                                Toast.makeText(Controller.this, "Produit supprimé avec succès", Toast.LENGTH_SHORT).show();
+                                ShowProduitList();
+                            } else {
+                                Toast.makeText(Controller.this, "Erreur lors de la suppression du produit", Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, "Failed to delete product from database");
+                            }
+                        });
+                    });
                 })
                 .setNegativeButton("Annuler", null)
                 .show();
@@ -537,19 +569,23 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                     return;
                 }
 
-                boolean update = dbHelper.updateCategory(
-                        category.getId(),
-                        nomCategorie,
-                        descriptionCategorie
-                );
+                AppExecutors.getInstance().diskIO().execute(() -> {
+                    boolean update = dbHelper.updateCategory(
+                            category.getId(),
+                            nomCategorie,
+                            descriptionCategorie
+                    );
 
-                if (update) {
-                    Toast.makeText(this, "Catégorie modifiée avec succès", Toast.LENGTH_SHORT).show();
-                    ShowCategorie();
-                } else {
-                    Toast.makeText(this, "Erreur lors de la modification de la catégorie", Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Failed to update category in database");
-                }
+                    AppExecutors.getInstance().mainThread().execute(() -> {
+                        if (update) {
+                            Toast.makeText(Controller.this, "Catégorie modifiée avec succès", Toast.LENGTH_SHORT).show();
+                            ShowCategorie();
+                        } else {
+                            Toast.makeText(Controller.this, "Erreur lors de la modification de la catégorie", Toast.LENGTH_SHORT).show();
+                            Log.e(TAG, "Failed to update category in database");
+                        }
+                    });
+                });
 
             } catch (Exception e) {
                 Toast.makeText(this, "Erreur : " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -566,14 +602,18 @@ public class Controller extends AppCompatActivity implements ProduitAdapter.OnPr
                 .setTitle("Supprimer la Catégorie")
                 .setMessage("Êtes-vous sûr de vouloir supprimer " + category.getNom() + " ?")
                 .setPositiveButton("Supprimer", (dialog, which) -> {
-                    boolean delete = dbHelper.deleteCategory(category.getId());
-                    if (delete) {
-                        Toast.makeText(this, "Catégorie supprimée avec succès", Toast.LENGTH_SHORT).show();
-                        ShowCategorie();
-                    } else {
-                        Toast.makeText(this, "Erreur lors de la suppression ou catégorie associée à des produits", Toast.LENGTH_SHORT).show();
-                        Log.e(TAG, "Failed to delete category from database");
-                    }
+                    AppExecutors.getInstance().diskIO().execute(() -> {
+                        boolean delete = dbHelper.deleteCategory(category.getId());
+                        AppExecutors.getInstance().mainThread().execute(() -> {
+                            if (delete) {
+                                Toast.makeText(Controller.this, "Catégorie supprimée avec succès", Toast.LENGTH_SHORT).show();
+                                ShowCategorie();
+                            } else {
+                                Toast.makeText(Controller.this, "Erreur lors de la suppression ou catégorie associée à des produits", Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, "Failed to delete category from database");
+                            }
+                        });
+                    });
                 })
                 .setNegativeButton("Annuler", null)
                 .show();

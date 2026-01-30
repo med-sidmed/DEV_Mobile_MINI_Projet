@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestListener;
@@ -29,6 +30,7 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
 
     public interface OnProductActionListener {
         void onEditProduct(Produits produit, int position);
+
         void onDeleteProduct(Produits produit, int position);
     }
 
@@ -39,11 +41,13 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
     }
 
     public void updateData(List<Produits> newProduitsList) {
-        produitsList.clear();
+        DiffUtil.DiffResult diffResult = DiffUtil
+                .calculateDiff(new ProduitDiffCallback(this.produitsList, newProduitsList));
+        this.produitsList.clear();
         if (newProduitsList != null) {
-            produitsList.addAll(newProduitsList);
+            this.produitsList.addAll(newProduitsList);
         }
-        notifyDataSetChanged();
+        diffResult.dispatchUpdatesTo(this);
     }
 
     @NonNull
@@ -58,7 +62,8 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
         Produits produit = produitsList.get(position);
         Log.d("ProduitAdapter", "Produit ID: " + produit.getId() + ", Nom: " + produit.getNom());
         holder.nomTextView.setText(produit.getNom() != null ? produit.getNom() : "Sans nom");
-        holder.descriptionTextView.setText(produit.getDescription() != null ? produit.getDescription() : "Aucune description");
+        holder.descriptionTextView
+                .setText(produit.getDescription() != null ? produit.getDescription() : "Aucune description");
         holder.prixTextView.setText(String.format("%.2f", produit.getPrix()));
         holder.quantiteTextView.setText(String.valueOf(produit.getQuantite()));
 
@@ -96,16 +101,21 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
                     .load(imageSource)
                     .placeholder(R.drawable.ic_launcher_background)
                     .error(R.drawable.image_not_found)
+                    .centerCrop()
+                    .override(200, 200) // Small preview images in this adapter
                     .listener(new RequestListener<Drawable>() {
                         @Override
-                        public boolean onLoadFailed(@Nullable com.bumptech.glide.load.engine.GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                            Log.e("ProduitAdapter", "Failed to load image: " + imageUrl + ", Error: " + (e != null ? e.getMessage() : "Unknown"));
+                        public boolean onLoadFailed(@Nullable com.bumptech.glide.load.engine.GlideException e,
+                                Object model, Target<Drawable> target, boolean isFirstResource) {
+                            Log.e("ProduitAdapter", "Failed to load image: " + imageUrl + ", Error: "
+                                    + (e != null ? e.getMessage() : "Unknown"));
                             imageView.setVisibility(View.VISIBLE); // Show error image
                             return false;
                         }
 
                         @Override
-                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, com.bumptech.glide.load.DataSource dataSource, boolean isFirstResource) {
+                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target,
+                                com.bumptech.glide.load.DataSource dataSource, boolean isFirstResource) {
                             Log.d("ProduitAdapter", "Image loaded successfully: " + imageUrl);
                             return false;
                         }
@@ -139,6 +149,40 @@ public class ProduitAdapter extends RecyclerView.Adapter<ProduitAdapter.ViewHold
             imageView4 = itemView.findViewById(R.id.imageView4);
             editButton = itemView.findViewById(R.id.produitEdit);
             deleteButton = itemView.findViewById(R.id.produitDelete);
+        }
+    }
+
+    public static class ProduitDiffCallback extends DiffUtil.Callback {
+        private final List<Produits> oldList;
+        private final List<Produits> newList;
+
+        public ProduitDiffCallback(List<Produits> oldList, List<Produits> newList) {
+            this.oldList = oldList;
+            this.newList = newList;
+        }
+
+        @Override
+        public int getOldListSize() {
+            return oldList != null ? oldList.size() : 0;
+        }
+
+        @Override
+        public int getNewListSize() {
+            return newList != null ? newList.size() : 0;
+        }
+
+        @Override
+        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+            return oldList.get(oldItemPosition).getId() == newList.get(newItemPosition).getId();
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+            Produits oldProduct = oldList.get(oldItemPosition);
+            Produits newProduct = newList.get(newItemPosition);
+            return oldProduct.getNom().equals(newProduct.getNom()) &&
+                    oldProduct.getPrix() == newProduct.getPrix() &&
+                    oldProduct.getQuantite() == newProduct.getQuantite();
         }
     }
 }

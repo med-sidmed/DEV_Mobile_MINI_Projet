@@ -1,95 +1,129 @@
 package com.example.shop.Adapter;
 
-import android.content.Intent;
-import android.util.Log;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
-import com.example.shop.Activities.CardActivity;
-import com.example.shop.Activities.ProduitDetailActivity;
-import com.example.shop.Databases.DBHelper;
-import com.example.shop.Models.ArticlePanier;
 import com.example.shop.R;
+import com.example.shop.Models.CartItem;
+import com.example.shop.Models.ArticlePanier;
+import com.example.shop.Databases.DBHelper;
 
+import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder> {
-    private static final String TAG = "CartAdapter";
-    private List<ArticlePanier> cartItems;
-    private DBHelper dbHelper;
 
-    public CartAdapter(List<ArticlePanier> cartItems, DBHelper dbHelper) {
+    private List<CartItem> cartItems;
+    private Context context;
+    private CartAdapterListener listener;
+
+    public interface CartAdapterListener {
+        void onQuantityChanged(int position, int newQuantity);
+
+        void onItemRemoved(int position);
+    }
+
+    public CartAdapter(Context context, List<CartItem> cartItems, CartAdapterListener listener) {
+        this.context = context;
         this.cartItems = cartItems;
-        this.dbHelper = dbHelper;
+        this.listener = listener;
+    }
+
+    // Alternative constructor for CardActivity compatibility
+    public CartAdapter(List<ArticlePanier> articlePanierList, DBHelper dbHelper) {
+        this.cartItems = new ArrayList<>();
+        for (ArticlePanier article : articlePanierList) {
+            if (article.getProduit() != null) {
+                this.cartItems.add(new CartItem(
+                        article.getId(),
+                        article.getProduit().getNom(),
+                        article.getPrixUnitaire(),
+                        article.getQuantite(),
+                        article.getProduit().getImage1()));
+            }
+        }
+        // No-op listener for simple display mode
+        this.listener = new CartAdapterListener() {
+            @Override
+            public void onQuantityChanged(int position, int newQuantity) {
+            }
+
+            @Override
+            public void onItemRemoved(int position) {
+            }
+        };
     }
 
     @NonNull
     @Override
     public CartViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        try {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_carts, parent, false);
-            return new CartViewHolder(view);
-        } catch (Exception e) {
-            Log.e(TAG, "Error inflating item_carts.xml: " + e.getMessage(), e);
-            throw e;
-        }
+        View view = LayoutInflater.from(context).inflate(R.layout.item_cart, parent, false);
+        return new CartViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull CartViewHolder holder, int position) {
-        ArticlePanier article = cartItems.get(position);
-        if (holder.productName == null || holder.productPrice == null || holder.quantity == null) {
-            Log.e(TAG, "One or more TextViews are null in CartViewHolder");
-            return;
-        }
-        if (article.getProduit() == null) {
-            Log.e(TAG, "Produit is null for article at position: " + position);
-            holder.productName.setText("Produit inconnu");
-            holder.productPrice.setText("0.00 €");
-            holder.quantity.setText("Quantité: " + article.getQuantite());
-            return;
-        }
-        holder.productName.setText(article.getProduit().getNom());
-        holder.productPrice.setText(String.format("%.2f €", article.getPrixUnitaire()));
-        holder.quantity.setText("Quantité: " + article.getQuantite());
+        CartItem item = cartItems.get(position);
 
-        String imagePath = article.getProduit().getImage1();
-        if (imagePath != null && !imagePath.isEmpty()) {
-            Glide.with(holder.itemView.getContext())
-                    .load(imagePath)
-                    .placeholder(R.drawable.image_not_found)
-                    .into(holder.productImage);
-        } else {
-            holder.productImage.setImageResource(R.drawable.image_head);
-        }
+        // Afficher les informations du produit
+        holder.productName.setText(item.getName());
 
-        holder.btnRemove.setOnClickListener(v -> {
-            dbHelper.supprimerArticlePanier(article.getId());
-            cartItems.remove(position);
-            notifyItemRemoved(position);
-            notifyItemRangeChanged(position, cartItems.size());
-            if (holder.itemView.getContext() instanceof CardActivity) {
-                ((CardActivity) holder.itemView.getContext()).updateCartSummary();
+        // Formater le prix avec le symbole €
+        NumberFormat formatter = NumberFormat.getCurrencyInstance(Locale.FRANCE);
+        holder.productPrice.setText(formatter.format(item.getPrice()));
+
+        holder.productQuantity.setText(String.valueOf(item.getQuantity()));
+
+        // Charger l'image avec Glide
+        // if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
+        // Glide.with(context)
+        // .load(item.getImageUrl())
+        // .placeholder(R.drawable.clothes_icon)
+        // .error(R.drawable.tshirt)
+        // .into(holder.productImage);
+        // } else {
+        // holder.productImage.setImageResource(R.drawable.clothes_icon);
+        // }
+
+        // Gestion des boutons de quantité
+        holder.btnMinus.setOnClickListener(v -> {
+            int position1 = holder.getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION) {
+                int newQuantity = item.getQuantity() - 1;
+                if (newQuantity >= 1) {
+                    item.setQuantity(newQuantity);
+                    holder.productQuantity.setText(String.valueOf(newQuantity));
+                    listener.onQuantityChanged(position1, newQuantity);
+                }
             }
         });
 
-        holder.btnDetails.setOnClickListener(v -> {
-            if (article.getProduit() != null) {
-                Intent intent = new Intent(holder.itemView.getContext(), ProduitDetailActivity.class);
-                intent.putExtra("product_id", article.getProduit().getId());
-                Log.d(TAG, "Navigating to ProductDetailActivity with product_id: " + article.getProduit().getId());
-                holder.itemView.getContext().startActivity(intent);
-            } else {
-                Log.e(TAG, "Cannot navigate to ProductDetailActivity: Produit is null");
+        holder.btnPlus.setOnClickListener(v -> {
+            int position2 = holder.getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION) {
+                int newQuantity = item.getQuantity() + 1;
+                item.setQuantity(newQuantity);
+                holder.productQuantity.setText(String.valueOf(newQuantity));
+                listener.onQuantityChanged(position, newQuantity);
+            }
+        });
+
+        // Gestion du bouton supprimer
+        holder.btnDelete.setOnClickListener(v -> {
+            int position3 = holder.getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION) {
+                listener.onItemRemoved(position3);
             }
         });
     }
@@ -99,26 +133,34 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         return cartItems.size();
     }
 
+    public void updateItems(List<CartItem> newItems) {
+        this.cartItems = newItems;
+        notifyDataSetChanged();
+    }
+
+    public void removeItem(int position) {
+        if (position >= 0 && position < cartItems.size()) {
+            cartItems.remove(position);
+            notifyItemRemoved(position);
+            notifyItemRangeChanged(position, cartItems.size());
+        }
+    }
+
     static class CartViewHolder extends RecyclerView.ViewHolder {
         ImageView productImage;
-        TextView productName, productPrice, quantity;
-        Button btnRemove, btnDetails;
+        TextView productName, productPrice, productQuantity;
+        Button btnMinus, btnPlus;
+        ImageButton btnDelete;
 
         public CartViewHolder(@NonNull View itemView) {
             super(itemView);
-            productImage = itemView.findViewById(R.id.product_image);
-            productName = itemView.findViewById(R.id.product_name);
-            productPrice = itemView.findViewById(R.id.product_price);
-            quantity = itemView.findViewById(R.id.quantity);
-            btnRemove = itemView.findViewById(R.id.btn_remove);
-            btnDetails = itemView.findViewById(R.id.btn_details);
-
-            Log.d(TAG, "CartViewHolder initialized - productImage: " + (productImage != null));
-            Log.d(TAG, "CartViewHolder initialized - productName: " + (productName != null));
-            Log.d(TAG, "CartViewHolder initialized - productPrice: " + (productPrice != null));
-            Log.d(TAG, "CartViewHolder initialized - quantity: " + (quantity != null));
-            Log.d(TAG, "CartViewHolder initialized - btnRemove: " + (btnRemove != null));
-            Log.d(TAG, "CartViewHolder initialized - btnDetails: " + (btnDetails != null));
+            productImage = itemView.findViewById(R.id.productImage);
+            productName = itemView.findViewById(R.id.productName);
+            productPrice = itemView.findViewById(R.id.productPrice);
+            productQuantity = itemView.findViewById(R.id.productQuantity);
+            btnMinus = itemView.findViewById(R.id.btnMinus);
+            btnPlus = itemView.findViewById(R.id.btnPlus);
+            btnDelete = itemView.findViewById(R.id.btnDelete);
         }
     }
 }

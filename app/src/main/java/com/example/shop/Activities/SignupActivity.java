@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.shop.Databases.DBHelper;
 import com.example.shop.Models.Users;
+import com.example.shop.Utils.PasswordUtils;
 import com.example.shop.R;
 
 import java.text.SimpleDateFormat;
@@ -47,13 +48,15 @@ public class SignupActivity extends AppCompatActivity {
             String confirmPassword = confirmPasswordEditText.getText().toString().trim();
 
             // Validation des champs
-            if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+            if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || password.isEmpty()
+                    || confirmPassword.isEmpty()) {
                 Toast.makeText(SignupActivity.this, "Veuillez remplir tous les champs", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (!password.equals(confirmPassword)) {
-                Toast.makeText(SignupActivity.this, "Les mots de passe ne correspondent pas", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SignupActivity.this, "Les mots de passe ne correspondent pas", Toast.LENGTH_SHORT)
+                        .show();
                 return;
             }
 
@@ -68,9 +71,10 @@ public class SignupActivity extends AppCompatActivity {
             user.setNom(nom);
             user.setPrenom(prenom);
             user.setEmail(email);
-            user.setPassword(password);
+            user.setPassword(PasswordUtils.hashPassword(password)); // Hashing password
             user.setRole("user"); // Rôle par défaut
-            user.setDateInscription(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
+            user.setDateInscription(
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
 
             dbHelper.ajouterUtilisateur(user);
             Toast.makeText(SignupActivity.this, "Inscription réussie", Toast.LENGTH_SHORT).show();

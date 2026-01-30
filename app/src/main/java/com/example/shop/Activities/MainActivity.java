@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,19 +20,23 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.shop.API.CartActivity;
+import com.example.shop.Activities.CartActivity;
 import com.example.shop.Activities.ControlPannel.Controller;
-import com.example.shop.Databases.DBHelper;
+import com.example.shop.Utils.AppExecutors;
 import com.example.shop.Models.Categories;
 import com.example.shop.Models.Produits;
+import com.example.shop.Databases.DBHelper;
 import com.example.shop.R;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements ProductMainAdapter.OnWishlistClickListener,
         ProductMainAdapter.OnProductClickListener {
     private static final String TAG = "MainActivity";
-    private ImageView profilePage, cartPage, wishlistPage, btnLogin, controllerPage, testApi, categoryClothes;
+    private ImageView btnLogin, controllerPage, testApi, categoryClothes;
+    private BottomNavigationView bottomNavigationView;
     private RecyclerView recyclerProducts;
     private ProductMainAdapter productAdapter;
     private LinearLayout tools, viewAll;
@@ -49,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements ProductMainAdapte
         setContentView(R.layout.activity_main);
 
         // Gestion des insets pour les barres système
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.bottomNavigation), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
@@ -63,9 +68,6 @@ public class MainActivity extends AppCompatActivity implements ProductMainAdapte
 
         // Initialiser les vues
         btnLogin = findViewById(R.id.btnGoToSecond);
-        wishlistPage = findViewById(R.id.wishlest_page);
-        cartPage = findViewById(R.id.cart_page);
-        profilePage = findViewById(R.id.profile_page);
         controllerPage = findViewById(R.id.controllerpage);
         testApi = findViewById(R.id.testapi);
         categoryClothes = findViewById(R.id.categorieClothes);
@@ -73,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements ProductMainAdapte
         tools = findViewById(R.id.tools);
         viewAll = findViewById(R.id.ViewAll);
         emptyMessage = findViewById(R.id.emptyMessage);
+        bottomNavigationView = findViewById(R.id.bottomNavigation);
 
         // Vérifier que toutes les vues sont initialisées
         if (emptyMessage == null) {
@@ -82,32 +85,57 @@ public class MainActivity extends AppCompatActivity implements ProductMainAdapte
         // Configurer le RecyclerView
         recyclerProducts.setLayoutManager(new GridLayoutManager(this, 2));
         int userId = sharedPreferences.getInt(KEY_USER_ID, -1);
-        List<Produits> produitsList = dbHelper.getAllProducts();
-        if (produitsList == null || produitsList.isEmpty()) {
-            if (emptyMessage != null) {
-                emptyMessage.setVisibility(View.VISIBLE);
-                emptyMessage.setText("Aucun produit trouvé. Ajoutez des produits depuis le panneau de contrôle.");
-                emptyMessage.setOnClickListener(v -> {
-                    Intent intent = new Intent(MainActivity.this, Controller.class);
-                    startActivity(intent);
-                });
-                recyclerProducts.setVisibility(View.GONE);
-            }
-            showCustomToast("Aucun produit trouvé");
-        } else {
-            if (emptyMessage != null) {
-                emptyMessage.setVisibility(View.GONE);
-                recyclerProducts.setVisibility(View.VISIBLE);
-            }
-        }
-        productAdapter = new ProductMainAdapter(produitsList, this, this, this, userId);
-        recyclerProducts.setAdapter(productAdapter);
 
-        // Gestion des clics sur les boutons de navigation
-        profilePage.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
-            startActivity(intent);
+        // Asynchronous loading
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            List<Produits> produitsList = dbHelper.getAllProducts();
+            Set<Integer> favoriteIds = userId != -1 ? dbHelper.getFavoriteProductIds(userId) : new HashSet<>();
+
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                if (produitsList == null || produitsList.isEmpty()) {
+                    if (emptyMessage != null) {
+                        emptyMessage.setVisibility(View.VISIBLE);
+                        emptyMessage
+                                .setText("Aucun produit trouvé. Ajoutez des produits depuis le panneau de contrôle.");
+                        emptyMessage.setOnClickListener(v -> {
+                            Intent intent = new Intent(MainActivity.this, Controller.class);
+                            startActivity(intent);
+                        });
+                        recyclerProducts.setVisibility(View.GONE);
+                    }
+                    showCustomToast("Aucun produit trouvé");
+                } else {
+                    if (emptyMessage != null) {
+                        emptyMessage.setVisibility(View.GONE);
+                        recyclerProducts.setVisibility(View.VISIBLE);
+                    }
+                }
+                productAdapter = new ProductMainAdapter(produitsList, this, this, this, userId, favoriteIds);
+                recyclerProducts.setAdapter(productAdapter);
+            });
         });
+
+        // Configurer la navigation basse
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_home) {
+                return true;
+            } else if (itemId == R.id.nav_wishlist) {
+                startActivity(new Intent(this, WishlistActivity.class));
+                return true;
+            } else if (itemId == R.id.nav_cart) {
+                startActivity(new Intent(this, CartActivity.class));
+                return true;
+            } else if (itemId == R.id.nav_profile) {
+                startActivity(new Intent(this, ProfileActivity.class));
+                return true;
+            }
+            return false;
+        });
+
+        // Gestion des clics sur les boutons de navigation (legacy removal)
+        // Les listeners sur profilePage, cartPage, wishlistPage ont été remplacés par
+        // bottomNavigationView
 
         categoryClothes.setOnClickListener(v -> {
             List<Categories> categories = dbHelper.getCategoriesByNom("Vêtements");
@@ -152,27 +180,6 @@ public class MainActivity extends AppCompatActivity implements ProductMainAdapte
             startActivity(intent);
         });
 
-        wishlistPage.setOnClickListener(v -> {
-            if (sharedPreferences.getInt(KEY_USER_ID, -1) == -1) {
-                showCustomToast("Veuillez vous connecter pour voir vos favoris");
-                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                startActivity(intent);
-                return;
-            }
-            Intent intent = new Intent(MainActivity.this, WishlistActivity.class);
-            startActivity(intent);
-        });
-
-        cartPage.setOnClickListener(v -> {
-            if (sharedPreferences.getInt(KEY_USER_ID, -1) == -1) {
-                showCustomToast("Veuillez vous connecter pour voir votre panier");
-                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                startActivity(intent);
-                return;
-            }
-            Intent intent = new Intent(MainActivity.this, CardActivity.class); // Line causing the crash
-            startActivity(intent);
-        });
 
         testApi.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, TestConneectApI.class); // Corrected class name
@@ -204,18 +211,24 @@ public class MainActivity extends AppCompatActivity implements ProductMainAdapte
             return;
         }
 
-        boolean success;
-        if (isAdded) {
-            success = dbHelper.addFavorite(userId, produit.getId());
-            Log.d(TAG, "Add favorite result for product_id=" + produit.getId() + ": " + success);
-            showCustomToast(success ? produit.getNom() + " ajouté aux favoris" :
-                    "Erreur lors de l'ajout aux favoris");
-        } else {
-            success = dbHelper.removeFavorite(userId, produit.getId());
-            Log.d(TAG, "Remove favorite result for product_id=" + produit.getId() + ": " + success);
-            showCustomToast(success ? produit.getNom() + " retiré des favoris" :
-                    "Erreur lors de la suppression des favoris");
-        }
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            boolean success;
+            if (isAdded) {
+                success = dbHelper.addFavorite(userId, produit.getId());
+                AppExecutors.getInstance().mainThread().execute(() -> {
+                    Log.d(TAG, "Add favorite result for product_id=" + produit.getId() + ": " + success);
+                    showCustomToast(
+                            success ? produit.getNom() + " ajouté aux favoris" : "Erreur lors de l'ajout aux favoris");
+                });
+            } else {
+                success = dbHelper.removeFavorite(userId, produit.getId());
+                AppExecutors.getInstance().mainThread().execute(() -> {
+                    Log.d(TAG, "Remove favorite result for product_id=" + produit.getId() + ": " + success);
+                    showCustomToast(success ? produit.getNom() + " retiré des favoris"
+                            : "Erreur lors de la suppression des favoris");
+                });
+            }
+        });
     }
 
     @Override
@@ -229,25 +242,34 @@ public class MainActivity extends AppCompatActivity implements ProductMainAdapte
     protected void onResume() {
         super.onResume();
         // Rafraîchir la liste des produits au retour sur l'activité
-        int userId = sharedPreferences.getInt(KEY_USER_ID, -1);
-        List<Produits> produitsList = dbHelper.getAllProducts();
-        if (produitsList == null || produitsList.isEmpty()) {
-            if (emptyMessage != null) {
-                emptyMessage.setVisibility(View.VISIBLE);
-                emptyMessage.setText("Aucun produit trouvé. Ajoutez des produits depuis le panneau de contrôle.");
-                emptyMessage.setOnClickListener(v -> {
-                    Intent intent = new Intent(MainActivity.this, Controller.class);
-                    startActivity(intent);
-                });
-                recyclerProducts.setVisibility(View.GONE);
-            }
-            showCustomToast("Aucun produit trouvé");
-        } else {
-            if (emptyMessage != null) {
-                emptyMessage.setVisibility(View.GONE);
-                recyclerProducts.setVisibility(View.VISIBLE);
-            }
-        }
-        productAdapter.updateData(produitsList);
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            int userId = sharedPreferences.getInt(KEY_USER_ID, -1);
+            List<Produits> produitsList = dbHelper.getAllProducts();
+            Set<Integer> favoriteIds = userId != -1 ? dbHelper.getFavoriteProductIds(userId) : new HashSet<>();
+
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                if (produitsList == null || produitsList.isEmpty()) {
+                    if (emptyMessage != null) {
+                        emptyMessage.setVisibility(View.VISIBLE);
+                        emptyMessage
+                                .setText("Aucun produit trouvé. Ajoutez des produits depuis le panneau de contrôle.");
+                        emptyMessage.setOnClickListener(v -> {
+                            Intent intent = new Intent(MainActivity.this, Controller.class);
+                            startActivity(intent);
+                        });
+                        recyclerProducts.setVisibility(View.GONE);
+                    }
+                    showCustomToast("Aucun produit trouvé");
+                } else {
+                    if (emptyMessage != null) {
+                        emptyMessage.setVisibility(View.GONE);
+                        recyclerProducts.setVisibility(View.VISIBLE);
+                    }
+                }
+                if (productAdapter != null) {
+                    productAdapter.updateData(produitsList);
+                }
+            });
+        });
     }
 }
